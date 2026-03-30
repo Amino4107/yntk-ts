@@ -4,3 +4,8 @@ export type PublicUser = {
   displayName: string | null;
   email: string;
 };
+
+export type AuthUser = PublicUser & {
+  roles: string[];
+  permissions: string[];
+};

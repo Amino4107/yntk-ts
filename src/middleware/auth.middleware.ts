@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../errors/app-error';
 import env from '../config/env';
-import type { PublicUser } from '../types/user';
+import type { AuthUser } from '../types/user';
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const authorizationHeader = req.headers.authorization;
@@ -27,7 +27,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const decoded = jwt.verify(token, env.jwtSecret);
 
     if (typeof decoded === 'object') {
-      const payload = decoded as jwt.JwtPayload & Partial<PublicUser>;
+      const payload = decoded as jwt.JwtPayload & Partial<AuthUser>;
 
       if (
         typeof payload.id === 'number' &&
@@ -40,6 +40,8 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
           displayName:
             typeof payload.displayName === 'string' ? payload.displayName : null,
           email: payload.email,
+          roles: Array.isArray(payload.roles) ? payload.roles : [],
+          permissions: Array.isArray(payload.permissions) ? payload.permissions : [],
         };
       }
     }

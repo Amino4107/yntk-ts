@@ -1,16 +1,25 @@
 import type { Prisma, User } from '../generated/prisma/client';
 import prisma from '../config/prisma';
 
-const create = (data: Prisma.UserCreateInput): Promise<User> =>
-  prisma.user.create({ data });
+const create = (data: Prisma.UserCreateInput): Promise<any> =>
+  prisma.user.create({ 
+    data,
+    include: { roles: { include: { permissions: true } } }
+  });
 
-const findByEmail = (email: string): Promise<User | null> =>
-  prisma.user.findUnique({ where: { email } });
+const findByEmail = (email: string): Promise<any> =>
+  prisma.user.findUnique({ 
+    where: { email },
+    include: { roles: { include: { permissions: true } } }
+  });
 
-const findById = (id: number): Promise<User | null> =>
-  prisma.user.findUnique({ where: { id } });
+const findById = (id: number): Promise<any> =>
+  prisma.user.findUnique({ 
+    where: { id },
+    include: { roles: { include: { permissions: true } } }
+  });
 
-const findByIdWithPassword = (id: number): Promise<User | null> =>
+const findByIdWithPassword = (id: number): Promise<any> =>
   prisma.user.findUnique({
     where: { id },
     select: {
@@ -26,6 +35,9 @@ const findByIdWithPassword = (id: number): Promise<User | null> =>
       resetPasswordExpires: true,
       createdAt: true,
       updatedAt: true,
+      roles: {
+        include: { permissions: true }
+      }
     },
   });
 

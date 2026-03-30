@@ -3,7 +3,7 @@ import env from '../config/env';
 import { AppError } from '../errors/app-error';
 import userRepository from '../repositories/user.repository';
 import type { PublicUser } from '../types/user';
-import { toPublicUser } from './user.mapper';
+import { toPublicUser, toAuthUser } from './user.mapper';
 import { hashPassword, comparePassword } from '../utils/password-utils';
 import emailService from './email.service';
 import { generateResetToken, generateVerificationToken, hashToken, generateJwtToken } from '../utils/token-utils';
@@ -37,6 +37,12 @@ const register = async (payload: RegisterInput): Promise<PublicUser> => {
       emailVerified: false,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: verificationExpires,
+      roles: {
+        connectOrCreate: {
+          where: { name: 'USER' },
+          create: { name: 'USER', description: 'Standard User Role' },
+        },
+      },
     });
 
     // Send verification email
@@ -109,7 +115,8 @@ const login = async (
   }
 
   const publicUser = toPublicUser(user);
-  const token = generateJwtToken(publicUser, env.jwtSecret, env.jwtExpiration);
+  const authUser = toAuthUser(user);
+  const token = generateJwtToken(authUser, env.jwtSecret, env.jwtExpiration);
 
   // Log successful login (audit trail)
   logger.info({

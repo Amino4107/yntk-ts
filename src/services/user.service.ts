@@ -142,6 +142,24 @@ const updatePassword = async (
   }, 'User password updated successfully');
 };
 
+const assignRoles = async (userId: number, roleIds: number[]): Promise<PublicUser> => {
+  const existing = await userRepository.findById(userId);
+
+  if (!existing) {
+    throw new AppError('User not found!', 404);
+  }
+
+  const updatedUser = await userRepository.updateRoles(userId, roleIds);
+
+  logger.info({
+    action: 'user_roles_updated',
+    userId: userId,
+    email: existing.email,
+  }, 'User roles updated');
+
+  return toPublicUser(updatedUser);
+};
+
 const userService = {
   createUser,
   getAllUsers,
@@ -149,6 +167,7 @@ const userService = {
   updateUser,
   deleteUser,
   updatePassword,
+  assignRoles,
 };
 
 export default userService;

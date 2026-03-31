@@ -115,6 +115,26 @@ const resendVerification = async (req: Request, res: Response) => {
   }
 };
 
+const getMe = async (req: Request, res: Response) => {
+  try {
+    const userData = req.userData;
+    
+    if (!userData) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Unauthenticated',
+      });
+    }
+
+    return res.json({
+      status: 'success',
+      data: userData,
+    });
+  } catch (error) {
+    return handleControllerError(error, res);
+  }
+};
+
 const authController = {
   register,
   login,
@@ -123,6 +143,7 @@ const authController = {
   resetPassword,
   verifyEmail,
   resendVerification,
+  getMe,
 };
 
 export default authController;

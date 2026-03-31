@@ -39,5 +39,6 @@ authRouter.post(
   validate(resendVerificationSchema),
   authController.resendVerification,
 );
+authRouter.get('/me', authMiddleware, authController.getMe);
 
 export default authRouter;

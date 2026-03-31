@@ -138,6 +138,19 @@ const updatePassword = async (req: Request, res: Response) => {
   }
 };
 
+const assignRoles = async (req: Request, res: Response) => {
+  const id = parseUserIdParam(req, res);
+  if (id === null) return;
+
+  try {
+    const { roles } = req.body;
+    const user = await userService.assignRoles(id, roles);
+    res.status(200).json({ status: 'success', data: user });
+  } catch (error) {
+    handleControllerError(error, res);
+  }
+};
+
 const userController = {
   createUser,
   getUsers,
@@ -145,6 +158,7 @@ const userController = {
   updateUser,
   deleteUser,
   updatePassword,
+  assignRoles,
 };
 
 export default userController;

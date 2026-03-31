@@ -77,3 +77,11 @@ export const resendVerificationSchema = z.object({
       .pipe(z.email('Invalid email format')),
   }),
 });
+
+export const assignRolesSchema = z.object({
+  body: z.object({
+    roles: z.array(z.number()).min(1, 'At least one role ID is required'),
+  }),
+});
+
+export type AssignRolesInput = z.infer<typeof assignRolesSchema>['body'];

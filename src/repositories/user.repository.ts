@@ -130,6 +130,17 @@ const clearVerificationToken = async (userId: number): Promise<User> =>
     },
   });
 
+const updateRoles = async (userId: number, roleIds: number[]): Promise<User> =>
+  prisma.user.update({
+    where: { id: userId },
+    data: {
+      roles: {
+        set: roleIds.map(id => ({ id }))
+      }
+    },
+    include: { roles: { include: { permissions: true } } }
+  });
+
 const userRepository = {
   create,
   findByEmail,
@@ -145,6 +156,7 @@ const userRepository = {
   saveVerificationToken,
   findByVerificationToken,
   clearVerificationToken,
+  updateRoles,
 };
 
 export default userRepository;

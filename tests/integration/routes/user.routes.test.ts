@@ -3,6 +3,8 @@ import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import app from '../../../src/app';
 import prisma from '../../../src/config/prisma';
 import { resetDb } from '../helpers/reset-db';
+import { seedPermissions } from '../../../prisma/seeds/permissions.seed';
+import { seedRoles } from '../../../prisma/seeds/roles.seed';
 
 // Mock email service
 vi.mock('../../../src/services/email.service', () => ({
@@ -18,6 +20,9 @@ describe('User Routes Integration', () => {
 
   beforeEach(async () => {
     await resetDb(prisma);
+    
+    const permissions = await seedPermissions(prisma as any);
+    await seedRoles(prisma as any, permissions);
 
     // Create user and get token
     const regRes = await request(app).post('/auth/register').send({
@@ -39,6 +44,22 @@ describe('User Routes Integration', () => {
     // Access data property
     token = loginRes.body.data?.token;
     userId = loginRes.body.data?.user?.id;
+
+    // VERY IMPORTANT: Upgrade user to SUPERADMIN so they bypass requirePermission() on the routes
+    const saRole = await prisma.role.findUnique({ where: { name: 'SUPERADMIN' } });
+    if (saRole) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { roles: { set: [{ id: saRole.id }] } }
+      });
+      
+      // We must re-login to get the updated JWT that contains the new permissions!
+      const reLogin = await request(app).post('/auth/login').send({
+        email: 'auth@example.com',
+        password: 'Password123!'
+      });
+      token = reLogin.body.data?.token;
+    }
   });
 
   afterAll(async () => {

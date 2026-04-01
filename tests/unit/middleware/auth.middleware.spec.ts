@@ -53,6 +53,8 @@ describe('Auth Middleware', () => {
       username: 'user',
       displayName: null,
       email: 'test@example.com',
+      roles: [],
+      permissions: [],
     });
     expect(next).toHaveBeenCalled();
   });

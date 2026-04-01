@@ -115,4 +115,28 @@ describe('User Service', () => {
       await expect(userService.deleteUser(999)).rejects.toThrow('User not found!');
     });
   });
+
+  describe('assignRoles', () => {
+    it('should properly call updateRoles repository and return public user', async () => {
+      const mockUser = { id: 1, email: 'test@example.com', username: 'test' };
+      const roleIds = [1, 2];
+      
+      vi.mocked(userRepository.findById).mockResolvedValue(mockUser as any);
+      vi.mocked(userRepository.updateRoles).mockResolvedValue({ ...mockUser, roles: [] } as any);
+
+      const result = await userService.assignRoles(1, roleIds);
+
+      expect(userRepository.updateRoles).toHaveBeenCalledWith(1, roleIds);
+      expect(logger.info).toHaveBeenCalled();
+      expect(result).not.toHaveProperty('password');
+      expect(result.id).toBe(1);
+    });
+
+    it('should throw error if user does not exist', async () => {
+      vi.mocked(userRepository.findById).mockResolvedValue(null);
+      
+      await expect(userService.assignRoles(999, [1])).rejects.toThrow('User not found!');
+      expect(userRepository.updateRoles).not.toHaveBeenCalled();
+    });
+  });
 });

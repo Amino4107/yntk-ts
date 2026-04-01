@@ -129,12 +129,24 @@ All endpoints respond with `{ status, message, data? }` JSON payloads.
 
 | Method | Path | Description | Auth | Validation |
 | --- | --- | --- | --- | --- |
-| `POST` | `/users` | Create a user (admin-style) | Required | `createUserSchema` |
-| `GET` | `/users` | List all users | Required | - |
-| `GET` | `/users/:id` | Fetch a user by ID | Required | - |
-| `PUT` | `/users/:id` | Update user fields (username, email, displayName) | Required | `updateUserSchema` |
-| `PATCH` | `/users/password` | Update current user's password | Required | `updatePasswordSchema` |
-| `DELETE` | `/users/:id` | Remove a user | Required | - |
+| `POST` | `/users` | Create a user (admin-style) | Required (`users:create`) | `createUserSchema` |
+| `GET` | `/users` | List all users | Required (`users:read`) | - |
+| `GET` | `/users/:id` | Fetch a user by ID | Required (`users:read`) | - |
+| `PUT` | `/users/:id` | Update user fields (username, email, displayName) | Required (`users:update`) | `updateUserSchema` |
+| `PUT` | `/users/:id/roles` | Assign roles to a user | Required (`roles:assign`) | `assignRolesSchema` |
+| `PATCH` | `/users/password` | Update current user's password | Required (`users:update`) | `updatePasswordSchema` |
+| `DELETE` | `/users/:id` | Remove a user | Required (`users:delete`) | - |
+
+### Role & Permission Routes (`/roles` & `/permissions`)
+
+| Method | Path | Description | Auth | Validation |
+| --- | --- | --- | --- | --- |
+| `GET` | `/roles` | List all roles | Required (`roles:read`) | - |
+| `GET` | `/roles/:id` | Fetch a role by ID | Required (`roles:read`) | - |
+| `POST` | `/roles` | Create a new role | Required (`roles:create`) | `createRoleSchema` |
+| `PUT` | `/roles/:id` | Update an existing role | Required (`roles:update`) | `updateRoleSchema` |
+| `DELETE` | `/roles/:id` | Remove a role | Required (`roles:delete`) | - |
+| `GET` | `/permissions` | List all system permissions | Required (`roles:read`) | - |
 
 **Auth Required**: Endpoints require `Authorization: Bearer <token>` header.
 
@@ -145,7 +157,10 @@ The API uses Zod for request validation with the following schemas:
 - **`registerUserSchema`**: Validates user registration (username, email, displayName, password)
 - **`createUserSchema`**: Validates user creation (username, email, displayName)
 - **`updateUserSchema`**: Validates user updates (partial fields)
+- **`assignRolesSchema`**: Validates assigning role IDs to a user
 - **`updatePasswordSchema`**: Validates password changes (currentPassword, newPassword, confirmPassword)
+- **`createRoleSchema`**: Validates new role details and array of permission IDs
+- **`updateRoleSchema`**: Validates partial updates to a role
 - **`verifyEmailSchema`**: Validates email verification token
 - **`resendVerificationSchema`**: Validates email for resending verification
 - **`forgotPasswordSchema`**: Validates email for password reset requests
@@ -186,6 +201,7 @@ The API uses a custom `AppError` class for controlled error handling:
 
 ## Security Features
 
+- ✅ Granular Role-Based Access Control (RBAC) with capability-driven tokens
 - ✅ Password hashing with bcrypt (configurable salt rounds)
 - ✅ JWT-based authentication with configurable expiration
 - ✅ Email verification with secure token generation (24-hour expiry by default)
@@ -370,7 +386,7 @@ Integration tests run against a real PostgreSQL database. Ensure your `DATABASE_
 - [x] ~~Set up production build script~~ ✅ **Completed**
 - [ ] Add API documentation (Swagger/OpenAPI)
 - [ ] Implement refresh token rotation
-- [ ] Implement Role Based Access Control (RBAC)
+- [x] ~~Implement Role Based Access Control (RBAC)~~ ✅ **Completed**
 - [x] ~~Add email verification flow~~ ✅ **Completed**
 - [x] ~~Add password reset functionality~~ ✅ **Completed**
 - [x] ~~Add rate limiting middleware~~ ✅ **Completed**

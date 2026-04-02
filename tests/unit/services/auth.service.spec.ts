@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import authService from '../../../src/services/auth.service';
 import userRepository from '../../../src/repositories/user.repository';
+import refreshTokenRepository from '../../../src/repositories/refresh-token.repository';
 import emailService from '../../../src/services/email.service';
 import logger from '../../../src/config/logger';
 
 // Mock dependencies
 vi.mock('../../../src/repositories/user.repository');
+vi.mock('../../../src/repositories/refresh-token.repository');
 vi.mock('../../../src/services/email.service');
 vi.mock('../../../src/config/logger', () => ({
   default: {
@@ -22,7 +24,20 @@ vi.mock('../../../src/utils/token-utils', () => ({
   generateVerificationToken: vi.fn().mockReturnValue('verification_token'),
   generateResetToken: vi.fn().mockReturnValue('reset_token'),
   hashToken: vi.fn().mockReturnValue('hashed_token'),
-  generateJwtToken: vi.fn().mockReturnValue('jwt_token'),
+  generateAccessToken: vi.fn().mockReturnValue('jwt_token'),
+  generateRefreshToken: vi.fn().mockReturnValue('refresh_token_value'),
+}));
+vi.mock('../../../src/config/env', () => ({
+  default: {
+    jwtSecret: 'test-secret',
+    accessTokenExpiry: '1h',
+    enableRefreshToken: true,
+    refreshTokenInJson: true,
+    refreshTokenInCookie: true,
+    refreshTokenExpiry: 604800000, // 7 days in ms
+    emailVerificationTokenExpiry: 86400000,
+    resetPasswordTokenExpiry: 3600000,
+  },
 }));
 
 describe('Auth Service', () => {
@@ -74,21 +89,28 @@ describe('Auth Service', () => {
   });
 
   describe('login', () => {
-    it('should login successfully with valid credentials', async () => {
-      const loginPayload = { email: 'test@example.com', password: 'password123' };
-      const user = {
-        id: 1,
-        email: 'test@example.com',
-        username: 'testuser',
-        password: 'hashed_password', // Mocked comparePassword returns true
-      };
+    const loginPayload = { email: 'test@example.com', password: 'password123' };
+    const user = {
+      id: 1,
+      email: 'test@example.com',
+      username: 'testuser',
+      displayName: 'Test User',
+      password: 'hashed_password',
+      roles: [],
+    };
 
+    it('should login successfully and return accessToken with refreshToken', async () => {
       vi.mocked(userRepository.findByEmail).mockResolvedValue(user as any);
+      vi.mocked(refreshTokenRepository.deleteAllRefreshTokensForUser).mockResolvedValue({ count: 0 });
+      vi.mocked(refreshTokenRepository.saveRefreshToken).mockResolvedValue({} as any);
 
       const result = await authService.login(loginPayload);
 
-      expect(result).toHaveProperty('token', 'jwt_token');
+      expect(result).toHaveProperty('accessToken', 'jwt_token');
+      expect(result).toHaveProperty('refreshToken', 'refresh_token_value');
       expect(result.user).toHaveProperty('email', 'test@example.com');
+      expect(refreshTokenRepository.deleteAllRefreshTokensForUser).toHaveBeenCalledWith(1);
+      expect(refreshTokenRepository.saveRefreshToken).toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalled();
     });
 
@@ -100,12 +122,6 @@ describe('Auth Service', () => {
     });
 
     it('should throw error if password is invalid', async () => {
-      const user = {
-        id: 1,
-        email: 'test@example.com',
-        password: 'hashed_password',
-      };
-
       vi.mocked(userRepository.findByEmail).mockResolvedValue(user as any);
 
       // Override mock for this test
@@ -114,6 +130,78 @@ describe('Auth Service', () => {
 
       await expect(authService.login({ email: 'test@example.com', password: 'wrong' }))
         .rejects.toThrow('Invalid credentials!');
+    });
+  });
+
+  describe('logout', () => {
+    it('should revoke refresh token on logout', async () => {
+      vi.mocked(refreshTokenRepository.deleteRefreshToken).mockResolvedValue({ count: 1 });
+
+      const result = await authService.logout(1, 'some_refresh_token');
+
+      expect(refreshTokenRepository.deleteRefreshToken).toHaveBeenCalledWith('some_refresh_token');
+      expect(result).toHaveProperty('message', 'Logged out successfully');
+    });
+
+    it('should handle logout without refresh token', async () => {
+      const result = await authService.logout(1, undefined);
+
+      expect(refreshTokenRepository.deleteRefreshToken).not.toHaveBeenCalled();
+      expect(result).toHaveProperty('message', 'Logged out successfully');
+    });
+  });
+
+  describe('refreshToken', () => {
+    const storedToken = {
+      id: 1,
+      token: 'old_refresh_token',
+      userId: 1,
+      expiresAt: new Date(Date.now() + 86400000), // expires tomorrow
+      createdAt: new Date(),
+      user: {
+        id: 1,
+        username: 'testuser',
+        displayName: 'Test User',
+        email: 'test@example.com',
+        password: 'hashed',
+        roles: [],
+      },
+    };
+
+    it('should rotate tokens successfully', async () => {
+      vi.mocked(refreshTokenRepository.findRefreshToken).mockResolvedValue(storedToken as any);
+      vi.mocked(refreshTokenRepository.deleteRefreshToken).mockResolvedValue({ count: 1 });
+      vi.mocked(refreshTokenRepository.deleteExpiredRefreshTokens).mockResolvedValue({ count: 0 });
+      vi.mocked(refreshTokenRepository.saveRefreshToken).mockResolvedValue({} as any);
+
+      const result = await authService.refreshToken('old_refresh_token');
+
+      expect(result).toHaveProperty('accessToken', 'jwt_token');
+      expect(result).toHaveProperty('refreshToken', 'refresh_token_value');
+      expect(refreshTokenRepository.deleteRefreshToken).toHaveBeenCalledWith('old_refresh_token');
+      expect(refreshTokenRepository.deleteExpiredRefreshTokens).toHaveBeenCalled();
+      expect(refreshTokenRepository.saveRefreshToken).toHaveBeenCalled();
+    });
+
+    it('should throw error for invalid refresh token', async () => {
+      vi.mocked(refreshTokenRepository.findRefreshToken).mockResolvedValue(null);
+
+      await expect(authService.refreshToken('invalid_token'))
+        .rejects.toThrow('Invalid refresh token');
+    });
+
+    it('should throw error for expired refresh token', async () => {
+      const expiredToken = {
+        ...storedToken,
+        expiresAt: new Date(Date.now() - 86400000), // expired yesterday
+      };
+
+      vi.mocked(refreshTokenRepository.findRefreshToken).mockResolvedValue(expiredToken as any);
+      vi.mocked(refreshTokenRepository.deleteRefreshToken).mockResolvedValue({ count: 1 });
+
+      await expect(authService.refreshToken('expired_token'))
+        .rejects.toThrow('Refresh token has expired, please login again');
+      expect(refreshTokenRepository.deleteRefreshToken).toHaveBeenCalledWith('expired_token');
     });
   });
 });

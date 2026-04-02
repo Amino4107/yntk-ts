@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import authController from '../../../src/controllers/auth.controller';
 import authService from '../../../src/services/auth.service';
-import logger from '../../../src/config/logger';
 
 vi.mock('../../../src/services/auth.service');
 vi.mock('../../../src/config/logger', () => ({
@@ -9,6 +8,15 @@ vi.mock('../../../src/config/logger', () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
+  },
+}));
+vi.mock('../../../src/config/env', () => ({
+  default: {
+    nodeEnv: 'development',
+    enableRefreshToken: true,
+    refreshTokenInJson: true,
+    refreshTokenInCookie: true,
+    refreshTokenExpiry: 604800000,
   },
 }));
 
@@ -20,11 +28,14 @@ describe('Auth Controller', () => {
     vi.clearAllMocks();
     req = {
       body: {},
+      headers: {},
       userData: { id: 1 },
     };
     res = {
       json: vi.fn(),
       status: vi.fn().mockReturnThis(),
+      cookie: vi.fn(),
+      clearCookie: vi.fn(),
     };
   });
 
@@ -43,7 +54,7 @@ describe('Auth Controller', () => {
 
       expect(authService.register).toHaveBeenCalledWith({
         username: 'test',
-        displayName: undefined, // req.body.displayName was undefined
+        displayName: undefined,
         email: 'test@example.com',
         password: 'pass',
       });
@@ -69,9 +80,13 @@ describe('Auth Controller', () => {
   });
 
   describe('login', () => {
-    it('should login a user and return token', async () => {
+    it('should login and return accessToken with refreshToken in JSON', async () => {
       req.body = { email: 'test@example.com', password: 'pass' };
-      const mockResult = { user: { id: 1 }, token: 'abc' };
+      const mockResult = {
+        user: { id: 1 },
+        accessToken: 'jwt_abc',
+        refreshToken: 'refresh_xyz',
+      };
 
       vi.mocked(authService.login).mockResolvedValue(mockResult as any);
 
@@ -81,22 +96,102 @@ describe('Auth Controller', () => {
         email: 'test@example.com',
         password: 'pass',
       });
+      expect(res.cookie).toHaveBeenCalledWith('refreshToken', 'refresh_xyz', expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'strict',
+      }));
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
         message: 'User logged in successfully!',
         data: mockResult,
       });
     });
+
+    it('should not set cookie when refreshTokenInCookie is false', async () => {
+      const env = await import('../../../src/config/env');
+      (env.default as any).refreshTokenInCookie = false;
+
+      req.body = { email: 'test@example.com', password: 'pass' };
+      const mockResult = {
+        user: { id: 1 },
+        accessToken: 'jwt_abc',
+        refreshToken: 'refresh_xyz',
+      };
+      vi.mocked(authService.login).mockResolvedValue(mockResult as any);
+
+      await authController.login(req, res);
+
+      expect(res.cookie).not.toHaveBeenCalled();
+
+      // Restore
+      (env.default as any).refreshTokenInCookie = true;
+    });
   });
 
   describe('logout', () => {
-    it('should logout user', () => {
-      authController.logout(req, res);
+    it('should logout and revoke refresh token from body', async () => {
+      req.body = { refreshToken: 'token_to_revoke' };
+      vi.mocked(authService.logout).mockResolvedValue({ message: 'Logged out successfully' });
 
-      expect(logger.info).toHaveBeenCalled();
+      await authController.logout(req, res);
+
+      expect(authService.logout).toHaveBeenCalledWith(1, 'token_to_revoke');
+      expect(res.clearCookie).toHaveBeenCalledWith('refreshToken');
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
-        message: 'User logged out successfully!',
+        message: 'Logged out successfully',
+      });
+    });
+
+    it('should logout and read refresh token from cookie', async () => {
+      req.headers = { cookie: 'refreshToken=cookie_token; other=val' };
+      vi.mocked(authService.logout).mockResolvedValue({ message: 'Logged out successfully' });
+
+      await authController.logout(req, res);
+
+      expect(authService.logout).toHaveBeenCalledWith(1, 'cookie_token');
+    });
+  });
+
+  describe('refreshToken', () => {
+    it('should refresh tokens from body and return new tokens', async () => {
+      req.body = { refreshToken: 'old_refresh' };
+      const mockResult = { accessToken: 'new_jwt', refreshToken: 'new_refresh' };
+      vi.mocked(authService.refreshToken).mockResolvedValue(mockResult);
+
+      await authController.refreshToken(req, res);
+
+      expect(authService.refreshToken).toHaveBeenCalledWith('old_refresh');
+      expect(res.cookie).toHaveBeenCalledWith('refreshToken', 'new_refresh', expect.objectContaining({
+        httpOnly: true,
+      }));
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        message: 'Token refreshed successfully',
+        data: mockResult,
+      });
+    });
+
+    it('should refresh tokens from cookie', async () => {
+      req.headers = { cookie: 'refreshToken=cookie_old_refresh' };
+      const mockResult = { accessToken: 'new_jwt', refreshToken: 'new_refresh' };
+      vi.mocked(authService.refreshToken).mockResolvedValue(mockResult);
+
+      await authController.refreshToken(req, res);
+
+      expect(authService.refreshToken).toHaveBeenCalledWith('cookie_old_refresh');
+    });
+
+    it('should return 401 if no refresh token provided', async () => {
+      req.body = {};
+      req.headers = {};
+
+      await authController.refreshToken(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'error',
+        message: 'Refresh token is required',
       });
     });
   });

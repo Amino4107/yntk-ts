@@ -3,8 +3,9 @@ import jwt from 'jsonwebtoken';
 import {
   generateResetToken,
   generateVerificationToken,
+  generateRefreshToken,
   hashToken,
-  generateJwtToken
+  generateAccessToken
 } from '../../../src/utils/token-utils';
 
 describe('Token Utils', () => {
@@ -50,19 +51,34 @@ describe('Token Utils', () => {
     });
   });
 
-  describe('generateJwtToken', () => {
+  describe('generateAccessToken', () => {
     it('should generate a valid JWT token', () => {
       const payload = { userId: 123 };
       const secret = 'testsecret';
       const expiresIn = '1h';
 
-      const token = generateJwtToken(payload, secret, expiresIn);
+      const token = generateAccessToken(payload, secret, expiresIn);
 
       expect(token).toBeDefined();
 
       // Verify the token
       const decoded = jwt.verify(token, secret) as any;
       expect(decoded.userId).toBe(123);
+    });
+  });
+
+  describe('generateRefreshToken', () => {
+    it('should generate a 64-character hex string', () => {
+      const token = generateRefreshToken();
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
+      expect(token).toHaveLength(64);
+    });
+
+    it('should generate unique tokens', () => {
+      const token1 = generateRefreshToken();
+      const token2 = generateRefreshToken();
+      expect(token1).not.toBe(token2);
     });
   });
 });

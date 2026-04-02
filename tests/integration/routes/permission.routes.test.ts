@@ -35,7 +35,7 @@ describe('Permission Routes Integration', () => {
     const loginRes = await request(app).post('/auth/login').send({
       email: 'admin2@example.com', password: 'Password123!'
     });
-    token = loginRes.body.data.token;
+    token = loginRes.body.data.accessToken;
   }, 20000);
 
   afterAll(async () => {

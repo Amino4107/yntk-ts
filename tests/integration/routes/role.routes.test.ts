@@ -46,7 +46,7 @@ describe('Role Routes Integration', () => {
       email: 'admin@example.com',
       password: 'Password123!'
     });
-    token = loginRes.body.data.token;
+    token = loginRes.body.data.accessToken;
   }, 20000);
 
   afterAll(async () => {
@@ -68,7 +68,7 @@ describe('Role Routes Integration', () => {
     const login = await request(app).post('/auth/login').send({ email: 'basic@example.com', password: 'Password123!' });
     expect(login.status).toBe(200);
     
-    const basicToken = login.body.data.token;
+    const basicToken = login.body.data.accessToken;
     const res = await request(app).get('/roles').set('Authorization', `Bearer ${basicToken}`);
     
     expect(res.status).toBe(403);

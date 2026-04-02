@@ -42,7 +42,7 @@ describe('User Routes Integration', () => {
     }
 
     // Access data property
-    token = loginRes.body.data?.token;
+    token = loginRes.body.data?.accessToken;
     userId = loginRes.body.data?.user?.id;
 
     // VERY IMPORTANT: Upgrade user to SUPERADMIN so they bypass requirePermission() on the routes
@@ -58,7 +58,7 @@ describe('User Routes Integration', () => {
         email: 'auth@example.com',
         password: 'Password123!'
       });
-      token = reLogin.body.data?.token;
+      token = reLogin.body.data?.accessToken;
     }
   });
 

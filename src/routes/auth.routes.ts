@@ -9,6 +9,8 @@ import {
   resetPasswordSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  refreshTokenSchema,
+  logoutSchema,
 } from '../validations/user.validation';
 import authController from '../controllers/auth.controller';
 
@@ -16,7 +18,8 @@ const authRouter: ExpressRouter = Router();
 
 authRouter.post('/register', validate(registerUserSchema), authController.register);
 authRouter.post('/login', authController.login);
-authRouter.post('/logout', authMiddleware, authController.logout);
+authRouter.post('/logout', authMiddleware, validate(logoutSchema), authController.logout);
+authRouter.post('/refresh-token', validate(refreshTokenSchema), authController.refreshToken);
 authRouter.post(
   '/forgot-password',
   forgotPasswordLimiter,

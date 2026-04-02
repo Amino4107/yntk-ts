@@ -78,6 +78,21 @@ export const resendVerificationSchema = z.object({
   }),
 });
 
+export const refreshTokenSchema = z.object({
+  body: z.object({
+    refreshToken: z.string().optional(),
+  }),
+  cookies: z.object({
+    refreshToken: z.string().optional(),
+  }).optional(),
+});
+
+export const logoutSchema = z.object({
+  body: z.object({
+    refreshToken: z.string().optional(),
+  }),
+});
+
 export const assignRolesSchema = z.object({
   body: z.object({
     roles: z.array(z.number()).min(1, 'At least one role ID is required'),

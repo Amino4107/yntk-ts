@@ -58,7 +58,8 @@ DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 
 # JWT Configuration
 JWT_SECRET=super-secret
-JWT_EXPIRATION=1h
+
+# Bcrypt Configuration
 SALT_ROUNDS=10
 
 # Email Configuration
@@ -69,8 +70,13 @@ EMAIL_PASSWORD=your-app-password
 EMAIL_FROM=noreply@yourapp.com
 
 # Token Configuration
-RESET_PASSWORD_TOKEN_EXPIRY=3600000
-EMAIL_VERIFICATION_TOKEN_EXPIRY=86400000
+ACCESS_TOKEN_EXPIRY="1h"
+ENABLE_REFRESH_TOKEN=true
+REFRESH_TOKEN_IN_JSON=true
+REFRESH_TOKEN_IN_COOKIE=true
+REFRESH_TOKEN_EXPIRY=7 * 24 * 60 * 60 * 1000 # 7 days in miliseconds
+RESET_PASSWORD_TOKEN_EXPIRY=1 * 60 * 60 * 1000 # 1 hour in miliseconds
+EMAIL_VERIFICATION_TOKEN_EXPIRY=24 * 60 * 60 * 10000 # 24 hours in miliseconds
 
 # CORS Configuration
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:8080,https://yourdomain.com
@@ -119,7 +125,8 @@ All endpoints respond with `{ status, message, data? }` JSON payloads.
 | --- | --- | --- | --- | --- |
 | `POST` | `/auth/register` | Register a new user and send verification email | Public | `registerUserSchema` |
 | `POST` | `/auth/login` | Verify credentials and return JWT token | Public | - |
-| `POST` | `/auth/logout` | Logout and log the event | Required | - |
+| `POST` | `/auth/logout` | Logout and revoke refresh token | Required | `logoutSchema` |
+| `POST` | `/auth/refresh-token` | Refresh access token using refresh token | Public | `refreshTokenSchema` |
 | `POST` | `/auth/verify-email` | Verify email address using token from email | Public | `verifyEmailSchema` |
 | `POST` | `/auth/resend-verification` | Resend verification email (rate limited: 3/10min) | Public | `resendVerificationSchema` |
 | `POST` | `/auth/forgot-password` | Request password reset email (rate limited: 3/15min) | Public | `forgotPasswordSchema` |
@@ -165,6 +172,8 @@ The API uses Zod for request validation with the following schemas:
 - **`resendVerificationSchema`**: Validates email for resending verification
 - **`forgotPasswordSchema`**: Validates email for password reset requests
 - **`resetPasswordSchema`**: Validates reset token and new password (min 8 chars, uppercase, lowercase, number)
+- **`refreshTokenSchema`**: Validates refresh token from body or cookies
+- **`logoutSchema`**: Validates optional refresh token for revocation on logout
 
 All schemas include:
 - Email format validation
@@ -211,6 +220,7 @@ The API uses a custom `AppError` class for controlled error handling:
 - ✅ Comprehensive audit logging with Pino (15+ event types tracked)
 - ✅ Request validation with Zod
 - ✅ Environment variable configuration
+- ✅ Refresh token rotation with configurable delivery (JSON body / HTTP-Only Cookie)
 - ✅ Unique constraints on username and email
 - ✅ CORS with origin whitelisting and credentials support
 
@@ -385,7 +395,7 @@ Integration tests run against a real PostgreSQL database. Ensure your `DATABASE_
 - [x] ~~Implement CORS configuration~~ ✅ **Completed**
 - [x] ~~Set up production build script~~ ✅ **Completed**
 - [ ] Add API documentation (Swagger/OpenAPI)
-- [ ] Implement refresh token rotation
+- [x] ~~Implement refresh token rotation~~ ✅ **Completed**
 - [x] ~~Implement Role Based Access Control (RBAC)~~ ✅ **Completed**
 - [x] ~~Add email verification flow~~ ✅ **Completed**
 - [x] ~~Add password reset functionality~~ ✅ **Completed**

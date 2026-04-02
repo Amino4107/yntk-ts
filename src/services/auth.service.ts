@@ -2,11 +2,12 @@ import { handleDuplicateEntryError } from '../errors/error-utils';
 import env from '../config/env';
 import { AppError } from '../errors/app-error';
 import userRepository from '../repositories/user.repository';
+import refreshTokenRepository from '../repositories/refresh-token.repository';
 import type { PublicUser } from '../types/user';
 import { toPublicUser, toAuthUser } from './user.mapper';
 import { hashPassword, comparePassword } from '../utils/password-utils';
 import emailService from './email.service';
-import { generateResetToken, generateVerificationToken, hashToken, generateJwtToken } from '../utils/token-utils';
+import { generateResetToken, generateVerificationToken, hashToken, generateAccessToken, generateRefreshToken } from '../utils/token-utils';
 import logger from '../config/logger';
 
 type RegisterInput = {
@@ -74,7 +75,7 @@ const register = async (payload: RegisterInput): Promise<PublicUser> => {
 
 const login = async (
   payload: LoginInput,
-): Promise<{ user: PublicUser; token: string }> => {
+): Promise<{ user: PublicUser; accessToken: string; refreshToken?: string }> => {
   const user = await userRepository.findByEmail(payload.email);
 
   if (!user) {
@@ -116,7 +117,17 @@ const login = async (
 
   const publicUser = toPublicUser(user);
   const authUser = toAuthUser(user);
-  const token = generateJwtToken(authUser, env.jwtSecret, env.jwtExpiration);
+  const token = generateAccessToken(authUser, env.jwtSecret, env.accessTokenExpiry);
+
+  let refreshTokenVal: string | undefined = undefined;
+  if (env.enableRefreshToken) {
+    // Clear old refresh tokens for this user (single-session per login)
+    await refreshTokenRepository.deleteAllRefreshTokensForUser(user.id);
+
+    refreshTokenVal = generateRefreshToken();
+    const expiresAt = new Date(Date.now() + env.refreshTokenExpiry);
+    await refreshTokenRepository.saveRefreshToken(user.id, refreshTokenVal, expiresAt);
+  }
 
   // Log successful login (audit trail)
   logger.info({
@@ -127,7 +138,65 @@ const login = async (
 
   return {
     user: publicUser,
-    token,
+    accessToken: token,
+    ...(refreshTokenVal ? { refreshToken: refreshTokenVal } : {}),
+  };
+};
+
+const logout = async (userId?: number, token?: string) => {
+  if (token && env.enableRefreshToken) {
+    await refreshTokenRepository.deleteRefreshToken(token);
+  }
+  
+  if (userId) {
+    logger.info({
+      action: 'user_logout_service',
+      userId,
+    }, 'User logged out and token optionally revoked');
+  }
+
+  return { message: 'Logged out successfully' };
+};
+
+const refreshToken = async (token: string) => {
+  if (!env.enableRefreshToken) {
+    throw new AppError('Refresh token feature is disabled', 400);
+  }
+
+  const storedToken = await refreshTokenRepository.findRefreshToken(token);
+
+  if (!storedToken) {
+    throw new AppError('Invalid refresh token', 401);
+  }
+
+  if (storedToken.expiresAt < new Date()) {
+    await refreshTokenRepository.deleteRefreshToken(token);
+    throw new AppError('Refresh token has expired, please login again', 401);
+  }
+
+  // Token Rotation logic: Delete old refresh token
+  await refreshTokenRepository.deleteRefreshToken(token);
+
+  // Piggyback cleanup: remove all expired tokens from DB
+  await refreshTokenRepository.deleteExpiredRefreshTokens();
+
+  // Generate new tokens
+  const authUser = toAuthUser(storedToken.user); // Note: verify user.mapper exported properly
+  const newAccessToken = generateAccessToken(authUser, env.jwtSecret, env.accessTokenExpiry);
+  
+  const newRefreshToken = generateRefreshToken();
+  const newExpiresAt = new Date(Date.now() + env.refreshTokenExpiry);
+  
+  await refreshTokenRepository.saveRefreshToken(storedToken.user.id, newRefreshToken, newExpiresAt);
+
+  logger.info({
+    action: 'token_refreshed',
+    userId: storedToken.user.id,
+  }, 'Access token and refresh token rotated successfully');
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
   };
 };
 
@@ -283,6 +352,8 @@ const resendVerification = async (email: string) => {
 const authService = {
   register,
   login,
+  logout,
+  refreshToken,
   forgotPassword,
   resetPassword,
   verifyEmail,

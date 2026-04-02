@@ -20,7 +20,7 @@ const env = {
 
   // JWT Configuration
   jwtSecret: ensure(process.env.JWT_SECRET, 'JWT_SECRET'),
-  jwtExpiration: process.env.JWT_EXPIRATION ?? '1h',
+  accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY ?? '1h',
   saltRounds: Number(process.env.SALT_ROUNDS) || 10,
 
   // Email Configuration
@@ -36,6 +36,12 @@ const env = {
   // Email Verification Configuration
   emailVerificationTokenExpiry: Number(process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY) || 24 * 60 * 60 * 1000, // 24 hours in milliseconds
 
+  // Refresh Token Configuration
+  enableRefreshToken: process.env.ENABLE_REFRESH_TOKEN !== 'false', // default to true
+  refreshTokenInJson: process.env.REFRESH_TOKEN_IN_JSON !== 'false', // default to true
+  refreshTokenInCookie: process.env.REFRESH_TOKEN_IN_COOKIE !== 'false', // default to true
+  refreshTokenExpiry: Number(process.env.REFRESH_TOKEN_EXPIRY) || 7 * 24 * 60 * 60 * 1000, // default 7 days in milliseconds
+  
   // CORS Configuration
   allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map(origin => origin.trim()) || [],
   corsCredentials: process.env.CORS_CREDENTIALS === 'true',

@@ -14,18 +14,20 @@ export const generateResetToken = (): string => generateRandomToken();
 
 export const generateVerificationToken = (): string => generateRandomToken();
 
+export const generateRefreshToken = (): string => generateRandomToken();
+
 export const hashToken = (token: string): string => {
   return crypto.createHash('sha256').update(token).digest('hex');
 };
 
 /**
- * Generate a JWT token
+ * Generate Access Token
  * @param payload - The data to encode in the token
  * @param secret - The secret key for signing
  * @param expiresIn - Token expiration time (e.g., '1h', '7d')
  * @returns Signed JWT token
  */
-export const generateJwtToken = (
+export const generateAccessToken = (
   payload: object,
   secret: Secret,
   expiresIn: string,

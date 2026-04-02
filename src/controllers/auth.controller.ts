@@ -37,7 +37,7 @@ const login = async (req: Request, res: Response) => {
       const cookieOptions = {
         httpOnly: true,
         secure: env.nodeEnv === 'production',
-        sameSite: 'strict' as const,
+        sameSite: env.cookieSameSite,
         maxAge: env.refreshTokenExpiry,
       };
       res.cookie('refreshToken', result.refreshToken, cookieOptions);
@@ -105,7 +105,7 @@ const refreshToken = async (req: Request, res: Response) => {
       const cookieOptions = {
         httpOnly: true,
         secure: env.nodeEnv === 'production',
-        sameSite: 'strict' as const,
+        sameSite: env.cookieSameSite,
         maxAge: env.refreshTokenExpiry,
       };
       res.cookie('refreshToken', result.refreshToken, cookieOptions);

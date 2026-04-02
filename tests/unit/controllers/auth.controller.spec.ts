@@ -17,6 +17,7 @@ vi.mock('../../../src/config/env', () => ({
     refreshTokenInJson: true,
     refreshTokenInCookie: true,
     refreshTokenExpiry: 604800000,
+    cookieSameSite: 'strict',
   },
 }));
 

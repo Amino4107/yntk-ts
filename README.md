@@ -75,6 +75,7 @@ ENABLE_REFRESH_TOKEN=true
 REFRESH_TOKEN_IN_JSON=true
 REFRESH_TOKEN_IN_COOKIE=true
 REFRESH_TOKEN_EXPIRY=7 * 24 * 60 * 60 * 1000 # 7 days in miliseconds
+COOKIE_SAME_SITE="strict" # strict, lax, none
 RESET_PASSWORD_TOKEN_EXPIRY=1 * 60 * 60 * 1000 # 1 hour in miliseconds
 EMAIL_VERIFICATION_TOKEN_EXPIRY=24 * 60 * 60 * 10000 # 24 hours in miliseconds
 

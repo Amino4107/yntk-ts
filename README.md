@@ -225,6 +225,31 @@ The API uses a custom `AppError` class for controlled error handling:
 - ✅ Unique constraints on username and email
 - ✅ CORS with origin whitelisting and credentials support
 
+## Refresh Token Configuration
+
+The API implements a robust, secure **Refresh Token Rotation** mechanism to safely extend user sessions without compromising security.
+
+### Configuration
+
+Refresh tokens are configured via environment variables in `.env`:
+
+```env
+ENABLE_REFRESH_TOKEN=true
+REFRESH_TOKEN_IN_JSON=true
+REFRESH_TOKEN_IN_COOKIE=true
+COOKIE_SAME_SITE="strict" # strict, lax, none
+REFRESH_TOKEN_EXPIRY=604800000 # 7 days in milliseconds
+```
+
+### Features
+
+- **Token Rotation**: Every time a user requests a new access token via `/auth/refresh-token`, their old refresh token is immediately revoked and a new pair is issued. This provides **Replay Protection**.
+- **Stolen Token Detection**: (Implicit via Rotation) If a stolen token is reused, the API will reject it since it was already rotated.
+- **Flexible Delivery**: You can choose to deliver the refresh token via a secure `HTTP-Only` cookie (for web clients to prevent XSS) and/or directly in the JSON response body (for mobile apps or specialized clients).
+- **Cross-Site Request Forgery (CSRF) Protection**: When using cookies, adjust the `COOKIE_SAME_SITE` variable. Use `strict` when the frontend and backend are on the exact same domain, or `lax`/`none` (along with `secure: true`) if operating across subdomains or entirely different domains.
+- **Single-Session By Default**: Logging into a new device automatically clears all older refresh tokens for that user, ensuring only one active session at a time.
+- **Auto-Cleanup**: Expired tokens are automatically purged from the database during any refresh request, functioning as a lazy-cleanup job.
+
 ## CORS Configuration
 
 The API includes Cross-Origin Resource Sharing (CORS) support to allow requests from different origins (e.g., frontend applications).

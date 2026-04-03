@@ -16,8 +16,21 @@ type UpdateUserInput = Partial<CreateUserInput>;
 const createUser = async (payload: CreateUserInput): Promise<PublicUser> => {
   try {
     const user = await userRepository.create(payload);
+    
+    logger.info({
+      action: 'user_created',
+      userId: user.id,
+      email: user.email,
+    }, 'User created successfully');
+    
     return toPublicUser(user);
   } catch (error) {
+    logger.error({
+      action: 'user_creation_failed',
+      email: payload.email,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, 'User creation failed');
+
     return handleDuplicateEntryError(error);
   }
 };

@@ -1,5 +1,6 @@
 import { AppError } from '../errors/app-error';
 import roleRepository from '../repositories/role.repository';
+import logger from '../config/logger';
 
 // Hardcoded system roles that cannot be deleted or renamed freely
 const PROTECTED_ROLES = ['SUPERADMIN', 'ADMIN', 'USER'];
@@ -24,11 +25,19 @@ const createRole = async (name: string, description?: string | undefined, permis
     throw new AppError('Role with this name already exists', 409);
   }
 
-  return await roleRepository.create({
+  const newRole = await roleRepository.create({
     name: formattedName,
     description,
     permissionIds
   });
+
+  logger.info({
+    action: 'role_created',
+    roleId: newRole.id,
+    name: newRole.name,
+  }, 'Role created successfully');
+
+  return newRole;
 };
 
 const updateRole = async (id: number, data: { name?: string | undefined; description?: string | undefined; permissionIds?: number[] | undefined }) => {
@@ -47,7 +56,15 @@ const updateRole = async (id: number, data: { name?: string | undefined; descrip
     data.name = formattedName;
   }
 
-  return await roleRepository.update(id, data);
+  const updatedRole = await roleRepository.update(id, data);
+
+  logger.info({
+    action: 'role_updated',
+    roleId: id,
+    updatedFields: Object.keys(data),
+  }, 'Role updated successfully');
+
+  return updatedRole;
 };
 
 const deleteRole = async (id: number) => {
@@ -61,7 +78,15 @@ const deleteRole = async (id: number) => {
   // We can check if `role._count?.users > 0` or rely on Prisma foreign key protections if configured.
   // For now, allow deletion if not protected.
   
-  return await roleRepository.deleteById(id);
+  const deletedRole = await roleRepository.deleteById(id);
+
+  logger.warn({
+    action: 'role_deleted',
+    roleId: id,
+    name: role.name,
+  }, 'Role deleted');
+  
+  return deletedRole;
 };
 
 const roleService = {

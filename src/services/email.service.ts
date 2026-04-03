@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import env from '../config/env';
 import { formatDuration } from '../utils/time-utils';
+import logger from '../config/logger';
 
 const transporter = nodemailer.createTransport({
   host: env.emailHost,
@@ -52,7 +53,22 @@ const sendResetPasswordEmail = async (email: string, resetToken: string) => {
     html,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+    logger.info({
+      action: 'email_sent',
+      type: 'reset_password',
+      email: email,
+    }, 'Reset password email sent successfully');
+  } catch (error) {
+    logger.error({
+      action: 'email_sending_failed',
+      type: 'reset_password',
+      email: email,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, 'Failed to send reset password email');
+    throw error;
+  }
 };
 
 const sendVerificationEmail = async (email: string, verificationToken: string) => {
@@ -71,7 +87,22 @@ const sendVerificationEmail = async (email: string, verificationToken: string) =
     html,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+    logger.info({
+      action: 'email_sent',
+      type: 'verify_email',
+      email: email,
+    }, 'Verification email sent successfully');
+  } catch (error) {
+    logger.error({
+      action: 'email_sending_failed',
+      type: 'verify_email',
+      email: email,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, 'Failed to send verification email');
+    throw error;
+  }
 };
 
 const emailService = {

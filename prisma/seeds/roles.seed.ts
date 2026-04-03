@@ -57,12 +57,22 @@ export const seedRoles = async (prisma: PrismaClient, permissions: MasterPermiss
   });
 
   // USER (No admin panel capabilities)
+  const userPermissionIds = [
+    { id: permissions.users.read.id },
+    { id: permissions.users.update.id },
+  ];
+  
   await prisma.role.upsert({
     where: { name: 'USER' },
-    update: {},
+    update: {
+       permissions: { set: userPermissionIds }
+    },
     create: { 
       name: 'USER', 
       description: 'Standard Application User',
+      permissions: {
+        connect: userPermissionIds
+      }
     },
   });
 };

@@ -116,6 +116,16 @@ Runs tsx in watch mode, recompiling on changes. The API listens on `PORT` from t
 
 > ❗ **Production build**: The repo currently runs via tsx; add a `tsc` build + `start` script before deploying to production environments like Vercel/Node runtime functions.
 
+## API Documentation
+
+The API includes interactive documentation powered by Swagger UI and OpenAPI 3.0 (`swagger-jsdoc` and `swagger-ui-express`).
+
+- **URL**: `/api-docs` (accessible when the server is running)
+- **Features**:
+  - Interactive API explorer to test endpoints directly from the browser.
+  - Comprehensive schemas for request bodies, parameters, and responses.
+  - Read-only in production: The "Try it out" functionality is disabled in production environments for security.
+
 ## API Endpoints
 
 All endpoints respond with `{ status, message, data? }` JSON payloads.
@@ -420,7 +430,7 @@ Integration tests run against a real PostgreSQL database. Ensure your `DATABASE_
 - [x] ~~Add automated unit test~~ ✅ **Completed**
 - [x] ~~Implement CORS configuration~~ ✅ **Completed**
 - [x] ~~Set up production build script~~ ✅ **Completed**
-- [ ] Add API documentation (Swagger/OpenAPI)
+- [x] ~~Add API documentation (Swagger/OpenAPI)~~ ✅ **Completed**
 - [x] ~~Implement refresh token rotation~~ ✅ **Completed**
 - [x] ~~Implement Role Based Access Control (RBAC)~~ ✅ **Completed**
 - [x] ~~Add email verification flow~~ ✅ **Completed**

@@ -1,0 +1,534 @@
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: wirosableng@gmail.com
+                password:
+                  type: string
+                  example: yntkTS#212
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "User logged in successfully"
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Invalid credentials"
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - displayName
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                  example: wirosableng
+                displayName:
+                  type: string
+                  example: Wiro Sableng
+                email:
+                  type: string
+                  example: wirosableng@gmail.com
+                password:
+                  type: string
+                  example: yntkTS#212
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "User created successfully"
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Bad request"
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        parameter:
+                          type: string
+                          example: "username"
+                        message:
+                          type: string
+                          example: "Username must be at least 3 characters long"
+  /auth/refresh-token:
+    post:
+      summary: Refresh Access Token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: "a73136052076eea648bed4b27d0374868819acbfab9666f1eeb0896b7af441c1"
+      responses:
+        '200':
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Token refreshed successfully"
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidXNlcm5hbWUiOiJ3aXJvc2FibGVuZyIsImVtYWlsIjoid2lyb3NhYmxlbmdAZ21haWwuY29tIiwiaXNWZXJpZmllZCI6dHJ1ZSwiaXNBY3RpdmUiOnRydWUsInJvbGVzIjpbImFkbWluIl0sImlhdCI6MTc0MzYyODc0OCwiZXhwIjoxNzQzNjI4ODAwfQ.2y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y1y"
+                      refreshToken:
+                        type: string
+                        example: "a73136052076eea648bed4b27d0374868819acbfab9666f1eeb0896b7af441c1"
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Invalid refresh token"
+  /auth/logout:
+    post:
+      summary: Logout
+      tags: 
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  example: "a73136052076eea648bed4b27d0374868819acbfab9666f1eeb0896b7af441c1"
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+  /auth/forgot-password:
+    post:
+      summary: Request password reset link
+      tags: 
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  example: "wirosableng@gmail.com"
+      responses:
+        '200':
+          description: Reset email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "If email exists, reset link has been sent"
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Bad request"
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        parameter:
+                          type: string
+                          example: "email"
+                        message:
+                          type: string
+                          example: "Email is required"
+  /auth/reset-password:
+    post:
+      summary: Reset password with token
+      tags: 
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token:
+                  type: string
+                  example: "a73136052076eea648bed4b27d0374868819acbfab9666f1eeb0896b7af441c1"
+                password:
+                  type: string
+                  example: "yntkTS#212"
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Password has been reset successfully"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        parameter:
+                          type: string
+                        message:
+                          type: string
+              examples:
+                validationError:
+                  summary: "Validation error"
+                  value: 
+                    status: "error"
+                    message: "Bad request"
+                    errors:
+                      - parameter: "token"
+                        message: "Token is required"
+                      - parameter: "password"
+                        message: "Password is required"
+                invalidToken:
+                  summary: "Invalid or expired token"
+                  value: 
+                    status: "error"
+                    message: "Invalid or expired token"
+  /auth/verify-email:
+    post:
+      summary: Verify email address
+      tags: 
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Email verified successfully"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        parameter:
+                          type: string
+                        message:
+                          type: string
+              examples:
+                validationError:
+                  summary: "Validation error"
+                  value: 
+                    status: "error"
+                    message: "Bad request"
+                    errors:
+                      - parameter: "token"
+                        message: "Token is required"
+                invalidToken:
+                  summary: "Invalid or expired token"
+                  value: 
+                    status: "error"
+                    message: "Invalid or expired token"
+  /auth/resend-verification:
+    post:
+      summary: Resend verification email
+      tags: 
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  example: "wirosableng@gmail.com"
+      responses:
+        '200':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Verification email sent"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        parameter:
+                          type: string
+                        message:
+                          type: string
+              examples:
+                validationError:
+                  summary: "Validation error"
+                  value: 
+                    status: "error"
+                    message: "Bad request"
+                    errors:
+                      - parameter: "email"
+                        message: "Email is required"
+                invalidEmail:
+                  summary: "Invalid email"
+                  value: 
+                    status: "error"
+                    message: "Invalid email format"
+                emailAlreadyVerified:
+                  summary: "Email already verified"
+                  value: 
+                    status: "error"
+                    message: "Email already verified"
+                emailNotFound:
+                  summary: "Email not found"
+                  value: 
+                    status: "error"
+                    message: "Email not found"
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "Too many verification emails requested. Please try again in 10 minutes"
+  /auth/me:
+    get:
+      summary: Get current authenticated user
+      tags: 
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      username:
+                        type: string
+                        example: "wirosableng"
+                      displayName:
+                        type: string
+                        example: "Wiro Sableng"
+                      email:
+                        type: string
+                        example: "wirosableng@gmail.com"
+                      roles: 
+                        type: array
+                        items:
+                          type: string
+                          example: "USER"
+                      permissions: 
+                        type: array
+                        example:
+                          - "user:read"
+                          - "user:update"
+                        items:
+                          type: string
+                        
+                        

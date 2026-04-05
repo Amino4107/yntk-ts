@@ -1,0 +1,52 @@
+paths:
+  /permissions:
+    get:
+      summary: Get all permissions
+      tags: 
+        - Permissions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Permissions retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        createdAt:
+                          type: string
+                        updatedAt:
+                          type: string
+                    example:
+                      - id: 1
+                        name: "user:read"
+                        description: "Read user"
+                        createdAt: "2022-01-01T00:00:00.000Z"
+                        updatedAt: "2022-01-01T00:00:00.000Z"
+                      - id: 2
+                        name: "user:write"
+                        description: "Write user"
+                        createdAt: "2022-01-01T00:00:00.000Z"
+                        updatedAt: "2022-01-01T00:00:00.000Z"
+                      - id: 3
+                        name: "user:delete"
+                        description: "Delete user"
+                        createdAt: "2022-01-01T00:00:00.000Z"
+                        updatedAt: "2022-01-01T00:00:00.000Z"

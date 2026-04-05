@@ -1,0 +1,84 @@
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: wirosableng
+        displayName:
+          type: string
+          example: Wiro Sableng
+        email:
+          type: string
+          example: wirosableng@gmail.com
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: USER
+        description:
+          type: string
+          example: Standart Application User
+        createdAt:
+          type: string
+          example: "2022-01-01T00:00:00.000Z"
+        updatedAt:
+          type: string
+          example: "2022-01-01T00:00:00.000Z"
+        permissions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              description:
+                type: string
+            example:
+              - id: 1
+                name: user:read
+                description: Can read user profile
+              - id: 2
+                name: user:update
+                description: Can edit existing user
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+    Forbidden:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "error"
+        message:
+          type: string
+          example: "Forbidden: You do not have the required permissions"

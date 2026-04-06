@@ -66,7 +66,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/Role'
         '400':
-          description: Validation Error
+          description: Validation or Relation Error
           content:
             application/json:
               schema:
@@ -74,10 +74,8 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: "error"
                   message:
                     type: string
-                    example: "Bad request"
                   errors:
                     type: array
                     items:
@@ -85,10 +83,22 @@ paths:
                       properties:
                         parameter:
                           type: string
-                          example: "name"
                         message:
                           type: string
-                          example: "Name must be at least 3 characters long"
+              examples:
+                validationError:
+                  summary: "Validation error"
+                  value:
+                    status: "error"
+                    message: "Bad request"
+                    errors:
+                      - parameter: "name"
+                        message: "Name must be at least 3 characters long"
+                relationError:
+                  summary: "Relation Error"
+                  value:
+                    status: "error"
+                    message: "One or more Permission(s) provided do not exist"
         '409':
           description: Role already exists
           content:
@@ -191,7 +201,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/Role'
         '400':
-          description: Validation Error
+          description: Validation or Relation Error
           content:
             application/json:
               schema:
@@ -199,10 +209,8 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: "error"
                   message:
                     type: string
-                    example: "Bad request"
                   errors:
                     type: array
                     items:
@@ -210,10 +218,22 @@ paths:
                       properties:
                         parameter:
                           type: string
-                          example: "name"
                         message:
                           type: string
-                          example: "Name must be at least 3 characters long"
+              examples:
+                validationError:
+                  summary: "Validation error"
+                  value:
+                    status: "error"
+                    message: "Bad request"
+                    errors:
+                      - parameter: "name"
+                        message: "Name must be at least 3 characters long"
+                relationError:
+                  summary: "Relation Error"
+                  value:
+                    status: "error"
+                    message: "One or more Permission(s) provided do not exist"
         '404':
           description: Role not found
           content:

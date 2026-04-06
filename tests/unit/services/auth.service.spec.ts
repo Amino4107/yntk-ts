@@ -137,14 +137,14 @@ describe('Auth Service', () => {
     it('should revoke refresh token on logout', async () => {
       vi.mocked(refreshTokenRepository.deleteRefreshToken).mockResolvedValue({ count: 1 });
 
-      const result = await authService.logout(1, 'some_refresh_token');
+      const result = await authService.logout('1', 'some_refresh_token');
 
       expect(refreshTokenRepository.deleteRefreshToken).toHaveBeenCalledWith('some_refresh_token');
       expect(result).toHaveProperty('message', 'Logged out successfully');
     });
 
     it('should handle logout without refresh token', async () => {
-      const result = await authService.logout(1, undefined);
+      const result = await authService.logout('1', undefined);
 
       expect(refreshTokenRepository.deleteRefreshToken).not.toHaveBeenCalled();
       expect(result).toHaveProperty('message', 'Logged out successfully');

@@ -67,13 +67,13 @@ describe('User Service', () => {
       const mockUser = { id: 1, username: 'test', email: 'test@example.com' };
       vi.mocked(userRepository.findById).mockResolvedValue(mockUser as any);
 
-      const result = await userService.getUserById(1);
+      const result = await userService.getUserById('1');
       expect(result.id).toBe(1);
     });
 
     it('should throw error if user not found', async () => {
       vi.mocked(userRepository.findById).mockResolvedValue(null);
-      await expect(userService.getUserById(999)).rejects.toThrow('User not found!');
+      await expect(userService.getUserById('999')).rejects.toThrow('User not found!');
     });
   });
 
@@ -85,16 +85,24 @@ describe('User Service', () => {
       vi.mocked(userRepository.findById).mockResolvedValue(mockUser as any);
       vi.mocked(userRepository.update).mockResolvedValue(updatedUser as any);
 
-      const result = await userService.updateUser(1, { displayName: 'Updated' });
+      const result = await userService.updateUser('1', { displayName: 'Updated' });
 
-      expect(userRepository.update).toHaveBeenCalledWith(1, { displayName: 'Updated' });
+      expect(userRepository.update).toHaveBeenCalledWith('1', { displayName: 'Updated' });
       expect(logger.info).toHaveBeenCalled();
       expect(result.displayName).toBe('Updated');
     });
 
     it('should throw error if user to update does not exist', async () => {
       vi.mocked(userRepository.findById).mockResolvedValue(null);
-      await expect(userService.updateUser(999, {})).rejects.toThrow('User not found!');
+      await expect(userService.updateUser('999', {})).rejects.toThrow('User not found!');
+    });
+
+    it('should catch repository errors (like duplicates) and forward them', async () => {
+      const mockUser = { id: 1 };
+      vi.mocked(userRepository.findById).mockResolvedValue(mockUser as any);
+      vi.mocked(userRepository.update).mockRejectedValue(new Error('Unique constraint failed'));
+
+      await expect(userService.updateUser('1', {})).rejects.toThrow('Unique constraint failed');
     });
   });
 
@@ -104,15 +112,15 @@ describe('User Service', () => {
       vi.mocked(userRepository.findById).mockResolvedValue(mockUser as any);
       vi.mocked(userRepository.deleteById).mockResolvedValue(mockUser as any);
 
-      await userService.deleteUser(1);
+      await userService.deleteUser('1');
 
-      expect(userRepository.deleteById).toHaveBeenCalledWith(1);
+      expect(userRepository.deleteById).toHaveBeenCalledWith('1');
       expect(logger.warn).toHaveBeenCalled();
     });
 
     it('should throw error if user to delete does not exist', async () => {
       vi.mocked(userRepository.findById).mockResolvedValue(null);
-      await expect(userService.deleteUser(999)).rejects.toThrow('User not found!');
+      await expect(userService.deleteUser('999')).rejects.toThrow('User not found!');
     });
   });
 
@@ -124,9 +132,9 @@ describe('User Service', () => {
       vi.mocked(userRepository.findById).mockResolvedValue(mockUser as any);
       vi.mocked(userRepository.updateRoles).mockResolvedValue({ ...mockUser, roles: [] } as any);
 
-      const result = await userService.assignRoles(1, roleIds);
+      const result = await userService.assignRoles('1', roleIds);
 
-      expect(userRepository.updateRoles).toHaveBeenCalledWith(1, roleIds);
+      expect(userRepository.updateRoles).toHaveBeenCalledWith('1', roleIds);
       expect(logger.info).toHaveBeenCalled();
       expect(result).not.toHaveProperty('password');
       expect(result.id).toBe(1);
@@ -135,7 +143,7 @@ describe('User Service', () => {
     it('should throw error if user does not exist', async () => {
       vi.mocked(userRepository.findById).mockResolvedValue(null);
       
-      await expect(userService.assignRoles(999, [1])).rejects.toThrow('User not found!');
+      await expect(userService.assignRoles('999', [1])).rejects.toThrow('User not found!');
       expect(userRepository.updateRoles).not.toHaveBeenCalled();
     });
   });

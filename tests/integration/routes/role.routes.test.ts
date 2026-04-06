@@ -14,7 +14,7 @@ vi.mock('../../../src/services/email.service', () => ({
 
 describe('Role Routes Integration', () => {
   let token: string;
-  let userId: number;
+  let userId: string;
 
   beforeEach(async () => {
     await resetDb(prisma);

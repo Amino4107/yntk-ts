@@ -53,7 +53,7 @@ describe('Token Utils', () => {
 
   describe('generateAccessToken', () => {
     it('should generate a valid JWT token', () => {
-      const payload = { userId: 123 };
+      const payload = { userId: '123' };
       const secret = 'testsecret';
       const expiresIn = '1h';
 
@@ -63,7 +63,7 @@ describe('Token Utils', () => {
 
       // Verify the token
       const decoded = jwt.verify(token, secret) as any;
-      expect(decoded.userId).toBe(123);
+      expect(decoded.userId).toBe('123');
     });
   });
 

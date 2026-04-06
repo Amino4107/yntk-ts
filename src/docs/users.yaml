@@ -191,7 +191,8 @@ paths:
           name: id
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: User found
@@ -232,7 +233,8 @@ paths:
           name: id
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -309,6 +311,19 @@ paths:
                   message:
                     type: string
                     example: "User not found"
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  message:
+                    type: string
+                    example: "A record with the provided value already exists"
     delete:
       summary: Delete user
       tags: 
@@ -320,7 +335,8 @@ paths:
           name: id
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       responses:
         '200':
           description: User deleted successfully
@@ -373,7 +389,8 @@ paths:
           name: id
           required: true
           schema:
-            type: integer
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -403,7 +420,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/User'
         '400':
-          description: Validation Error
+          description: Validation or Relation Error
           content:
             application/json:
               schema:
@@ -411,10 +428,8 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: "error"
                   message:
                     type: string
-                    example: "Bad request"
                   errors:
                     type: array
                     items:
@@ -424,9 +439,20 @@ paths:
                           type: string
                         message:
                           type: string
-                      example:
-                        - parameter: "roles"
-                          message: "At least one role ID is required"
+              examples:
+                validationError:
+                  summary: "Validation error"
+                  value:
+                    status: "error"
+                    message: "Bad request"
+                    errors:
+                      - parameter: "roles"
+                        message: "At least one role ID is required"
+                relationError:
+                  summary: "Relation Error"
+                  value:
+                    status: "error"
+                    message: "One or more Role(s) provided do not exist"
         '404':
           description: User not found
           content:

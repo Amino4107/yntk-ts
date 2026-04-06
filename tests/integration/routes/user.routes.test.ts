@@ -16,7 +16,7 @@ vi.mock('../../../src/services/email.service', () => ({
 
 describe('User Routes Integration', () => {
   let token: string;
-  let userId: number;
+  let userId: string;
 
   beforeEach(async () => {
     await resetDb(prisma);
@@ -102,6 +102,27 @@ describe('User Routes Integration', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.displayName).toBe('Updated Name');
+  }, 10000);
+
+  it('should return 409 Conflict when updating to an existing email', async () => {
+    // create a second user first
+    await request(app).post('/auth/register').send({
+      username: 'seconduser',
+      displayName: 'Second User',
+      email: 'second@example.com',
+      password: 'Password123!',
+    });
+
+    // attempt to update the first user with the second user's email
+    const res = await request(app)
+      .put(`/users/${userId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        email: 'second@example.com',
+      });
+
+    expect(res.status).toBe(409);
+    expect(res.body.message).toMatch(/already exists/i);
   }, 10000);
 
   it('should fail delete user without verified email', async () => {

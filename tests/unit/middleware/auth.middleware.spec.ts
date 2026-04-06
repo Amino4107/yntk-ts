@@ -41,7 +41,7 @@ describe('Auth Middleware', () => {
 
   it('should call next and set userData if token is valid', () => {
     req.headers.authorization = 'Bearer validtoken';
-    const payload = { id: 1, username: 'user', email: 'test@example.com' };
+    const payload = { id: '1', username: 'user', email: 'test@example.com' };
 
     vi.spyOn(jwt, 'verify').mockReturnValue(payload as any);
 
@@ -49,7 +49,7 @@ describe('Auth Middleware', () => {
 
     expect(jwt.verify).toHaveBeenCalledWith('validtoken', 'secret');
     expect(req.userData).toEqual({
-      id: 1,
+      id: '1',
       username: 'user',
       displayName: null,
       email: 'test@example.com',

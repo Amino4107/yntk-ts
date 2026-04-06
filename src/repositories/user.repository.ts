@@ -13,13 +13,13 @@ const findByEmail = (email: string): Promise<any> =>
     include: { roles: { include: { permissions: true } } }
   });
 
-const findById = (id: number): Promise<any> =>
+const findById = (id: string): Promise<any> =>
   prisma.user.findUnique({ 
     where: { id },
     include: { roles: { include: { permissions: true } } }
   });
 
-const findByIdWithPassword = (id: number): Promise<any> =>
+const findByIdWithPassword = (id: string): Promise<any> =>
   prisma.user.findUnique({
     where: { id },
     select: {
@@ -43,13 +43,13 @@ const findByIdWithPassword = (id: number): Promise<any> =>
 
 const findAll = (): Promise<User[]> => prisma.user.findMany();
 
-const update = (id: number, data: Prisma.UserUpdateInput): Promise<User> =>
+const update = (id: string, data: Prisma.UserUpdateInput): Promise<User> =>
   prisma.user.update({
     where: { id },
     data,
   });
 
-const deleteById = (id: number): Promise<User> =>
+const deleteById = (id: string): Promise<User> =>
   prisma.user.delete({ where: { id } });
 
 const saveResetToken = async (
@@ -77,7 +77,7 @@ const findByResetToken = async (
     },
   });
 
-const clearResetToken = async (userId: number): Promise<User> =>
+const clearResetToken = async (userId: string): Promise<User> =>
   prisma.user.update({
     where: { id: userId },
     data: {
@@ -87,7 +87,7 @@ const clearResetToken = async (userId: number): Promise<User> =>
   });
 
 const updatePassword = async (
-  userId: number,
+  userId: string,
   hashedPassword: string,
 ): Promise<User> =>
   prisma.user.update({
@@ -96,7 +96,7 @@ const updatePassword = async (
   });
 
 const saveVerificationToken = async (
-  userId: number,
+  userId: string,
   token: string,
   expiresAt: Date,
 ): Promise<User> =>
@@ -120,7 +120,7 @@ const findByVerificationToken = async (
     },
   });
 
-const clearVerificationToken = async (userId: number): Promise<User> =>
+const clearVerificationToken = async (userId: string): Promise<User> =>
   prisma.user.update({
     where: { id: userId },
     data: {
@@ -130,7 +130,7 @@ const clearVerificationToken = async (userId: number): Promise<User> =>
     },
   });
 
-const updateRoles = async (userId: number, roleIds: number[]): Promise<User> =>
+const updateRoles = async (userId: string, roleIds: number[]): Promise<User> =>
   prisma.user.update({
     where: { id: userId },
     data: {

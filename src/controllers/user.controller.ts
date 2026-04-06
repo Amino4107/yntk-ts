@@ -3,13 +3,22 @@ import type { Request, Response } from 'express';
 import userService from '../services/user.service';
 import { handleControllerError } from './controller-utils';
 
-const parseUserIdParam = (req: Request, res: Response): number | null => {
-  const id = Number(req.params.id);
+const parseUserIdParam = (req: Request, res: Response): string | null => {
+  const id = req.params.id;
 
-  if (Number.isNaN(id)) {
+  if (typeof id !== 'string' || id.trim().length === 0) {
     res.status(400).json({
       status: 'error',
-      message: 'User id must be a number',
+      message: 'User id must be a string',
+    });
+    return null;
+  }
+
+  const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+  if (!uuidRegex.test(id)) {
+    res.status(404).json({
+      status: 'error',
+      message: 'User not found!',
     });
     return null;
   }

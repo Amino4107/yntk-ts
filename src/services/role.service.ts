@@ -1,4 +1,5 @@
 import { AppError } from '../errors/app-error';
+import { handleDuplicateEntryError, handleRecordNotFoundError } from '../errors/error-utils';
 import roleRepository from '../repositories/role.repository';
 import logger from '../config/logger';
 
@@ -25,19 +26,25 @@ const createRole = async (name: string, description?: string | undefined, permis
     throw new AppError('Role with this name already exists', 409);
   }
 
-  const newRole = await roleRepository.create({
-    name: formattedName,
-    description,
-    permissionIds
-  });
+  try {
+    const newRole = await roleRepository.create({
+      name: formattedName,
+      description,
+      permissionIds
+    });
 
-  logger.info({
-    action: 'role_created',
-    roleId: newRole.id,
-    name: newRole.name,
-  }, 'Role created successfully');
+    logger.info({
+      action: 'role_created',
+      roleId: newRole.id,
+      name: newRole.name,
+    }, 'Role created successfully');
 
-  return newRole;
+    return newRole;
+  } catch (error) {
+    handleRecordNotFoundError(error, 'Permission');
+    handleDuplicateEntryError(error);
+    throw error; // Fallback for TS compiler
+  }
 };
 
 const updateRole = async (id: number, data: { name?: string | undefined; description?: string | undefined; permissionIds?: number[] | undefined }) => {
@@ -56,15 +63,21 @@ const updateRole = async (id: number, data: { name?: string | undefined; descrip
     data.name = formattedName;
   }
 
-  const updatedRole = await roleRepository.update(id, data);
+  try {
+    const updatedRole = await roleRepository.update(id, data);
 
-  logger.info({
-    action: 'role_updated',
-    roleId: id,
-    updatedFields: Object.keys(data),
-  }, 'Role updated successfully');
+    logger.info({
+      action: 'role_updated',
+      roleId: id,
+      updatedFields: Object.keys(data),
+    }, 'Role updated successfully');
 
-  return updatedRole;
+    return updatedRole;
+  } catch (error) {
+    handleRecordNotFoundError(error, 'Permission');
+    handleDuplicateEntryError(error);
+    throw error; // Fallback for TS compiler
+  }
 };
 
 const deleteRole = async (id: number) => {

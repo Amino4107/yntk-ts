@@ -1,5 +1,5 @@
 import { AppError } from '../errors/app-error';
-import { handleDuplicateEntryError } from '../errors/error-utils';
+import { handleDuplicateEntryError, handleRecordNotFoundError } from '../errors/error-utils';
 import userRepository from '../repositories/user.repository';
 import type { PublicUser } from '../types/user';
 import { toPublicUser } from './user.mapper';
@@ -40,7 +40,7 @@ const getAllUsers = async (): Promise<PublicUser[]> => {
   return users.map(toPublicUser);
 };
 
-const getUserById = async (id: number): Promise<PublicUser> => {
+const getUserById = async (id: string): Promise<PublicUser> => {
   const user = await userRepository.findById(id);
 
   if (!user) {
@@ -51,7 +51,7 @@ const getUserById = async (id: number): Promise<PublicUser> => {
 };
 
 const updateUser = async (
-  id: number,
+  id: string,
   payload: UpdateUserInput,
 ): Promise<PublicUser> => {
   const existing = await userRepository.findById(id);
@@ -60,20 +60,24 @@ const updateUser = async (
     throw new AppError('User not found!', 404);
   }
 
-  const updatedUser = await userRepository.update(id, payload);
+  try {
+    const updatedUser = await userRepository.update(id, payload);
 
-  // Log profile update (audit trail)
-  logger.info({
-    action: 'user_profile_updated',
-    userId: id,
-    email: existing.email,
-    updatedFields: Object.keys(payload),
-  }, 'User profile updated');
+    // Log profile update (audit trail)
+    logger.info({
+      action: 'user_profile_updated',
+      userId: id,
+      email: existing.email,
+      updatedFields: Object.keys(payload),
+    }, 'User profile updated');
 
-  return toPublicUser(updatedUser);
+    return toPublicUser(updatedUser);
+  } catch (error) {
+    return handleDuplicateEntryError(error);
+  }
 };
 
-const deleteUser = async (id: number): Promise<void> => {
+const deleteUser = async (id: string): Promise<void> => {
   const existing = await userRepository.findById(id);
 
   if (!existing) {
@@ -92,7 +96,7 @@ const deleteUser = async (id: number): Promise<void> => {
 };
 
 const updatePassword = async (
-  userId: number,
+  userId: string,
   currentPassword: string,
   newPassword: string,
 ): Promise<void> => {
@@ -155,22 +159,27 @@ const updatePassword = async (
   }, 'User password updated successfully');
 };
 
-const assignRoles = async (userId: number, roleIds: number[]): Promise<PublicUser> => {
+const assignRoles = async (userId: string, roleIds: number[]): Promise<PublicUser> => {
   const existing = await userRepository.findById(userId);
 
   if (!existing) {
     throw new AppError('User not found!', 404);
   }
 
-  const updatedUser = await userRepository.updateRoles(userId, roleIds);
+  try {
+    const updatedUser = await userRepository.updateRoles(userId, roleIds);
 
-  logger.info({
-    action: 'user_roles_updated',
-    userId: userId,
-    email: existing.email,
-  }, 'User roles updated');
+    logger.info({
+      action: 'user_roles_updated',
+      userId: userId,
+      email: existing.email,
+    }, 'User roles updated');
 
-  return toPublicUser(updatedUser);
+    return toPublicUser(updatedUser);
+  } catch (error) {
+    handleRecordNotFoundError(error, 'Role');
+    throw error; // Fallback to satisfy TS compiler in case handleRecordNotFoundError doesn't throw
+  }
 };
 
 const userService = {

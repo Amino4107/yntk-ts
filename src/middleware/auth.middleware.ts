@@ -30,7 +30,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
       const payload = decoded as jwt.JwtPayload & Partial<AuthUser>;
 
       if (
-        typeof payload.id === 'number' &&
+        typeof payload.id === 'string' &&
         typeof payload.username === 'string' &&
         typeof payload.email === 'string'
       ) {

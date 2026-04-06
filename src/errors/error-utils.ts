@@ -44,3 +44,22 @@ export const handleDuplicateEntryError = (error: unknown): never => {
   // Re-throw if it's not the error we're looking for
   throw error;
 };
+
+/**
+ * Handles Prisma's P2025 error (record not found/foreign key constraint failed during connect)
+ * by throwing a 400 Bad Request AppError with a specific message.
+ * Re-throws any other error.
+ * @param error The error object to check.
+ * @param resourceName The name of the resource that was not found (e.g. 'Permission', 'Role')
+ */
+export const handleRecordNotFoundError = (error: unknown, resourceName: string = 'Record'): never => {
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P2025'
+  ) {
+    throw new AppError(`One or more ${resourceName}(s) provided do not exist`, 400);
+  }
+
+  // Re-throw if it's not the error we're looking for
+  throw error;
+};

@@ -143,7 +143,7 @@ const login = async (
   };
 };
 
-const logout = async (userId?: number, token?: string) => {
+const logout = async (userId?: string, token?: string) => {
   if (token && env.enableRefreshToken) {
     await refreshTokenRepository.deleteRefreshToken(token);
   }

@@ -1,7 +1,7 @@
 import prisma from '../config/prisma';
 
 export const saveRefreshToken = async (
-  userId: number,
+  userId: string,
   token: string,
   expiresAt: Date,
 ) => {
@@ -28,7 +28,7 @@ export const deleteRefreshToken = async (token: string) => {
   });
 };
 
-export const deleteAllRefreshTokensForUser = async (userId: number) => {
+export const deleteAllRefreshTokensForUser = async (userId: string) => {
   return prisma.refreshToken.deleteMany({
     where: { userId },
   });

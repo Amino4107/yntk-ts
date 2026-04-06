@@ -501,8 +501,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "User profile retrieved successfully"
                   data:
                     type: object
                     properties:
@@ -530,5 +534,3 @@ paths:
                           - "user:update"
                         items:
                           type: string
-                        
-                        

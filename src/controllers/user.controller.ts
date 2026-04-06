@@ -145,7 +145,7 @@ const assignRoles = async (req: Request, res: Response) => {
   try {
     const { roles } = req.body;
     const user = await userService.assignRoles(id, roles);
-    res.status(200).json({ status: 'success', data: user });
+    res.status(200).json({ status: 'success', message: 'Roles assigned successfully', data: user });
   } catch (error) {
     handleControllerError(error, res);
   }

@@ -6,7 +6,7 @@ import type { CreateRoleInput, UpdateRoleInput } from '../validations/role.valid
 const getRoles = async (req: Request, res: Response) => {
   try {
     const roles = await roleService.getAllRoles();
-    res.status(200).json({ status: 'success', data: roles });
+    res.status(200).json({ status: 'success', message: 'Roles retrieved successfully', data: roles });
   } catch (error) {
     handleControllerError(error, res);
   }
@@ -16,7 +16,7 @@ const getRole = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const role = await roleService.getRoleById(id);
-    res.status(200).json({ status: 'success', data: role });
+    res.status(200).json({ status: 'success', message: 'Role retrieved successfully', data: role });
   } catch (error) {
     handleControllerError(error, res);
   }
@@ -26,7 +26,7 @@ const createRole = async (req: Request<{}, {}, CreateRoleInput>, res: Response) 
   try {
     const { name, description, permissions } = req.body;
     const role = await roleService.createRole(name as string, description, permissions);
-    res.status(201).json({ status: 'success', data: role });
+    res.status(201).json({ status: 'success', message: 'Role created successfully', data: role });
   } catch (error) {
     handleControllerError(error, res);
   }
@@ -42,7 +42,7 @@ const updateRole = async (req: Request<{ id: string }, {}, UpdateRoleInput>, res
     if (permissions !== undefined) payload.permissionIds = permissions;
 
     const role = await roleService.updateRole(id, payload);
-    res.status(200).json({ status: 'success', data: role });
+    res.status(200).json({ status: 'success', message: 'Role updated successfully', data: role });
   } catch (error) {
     handleControllerError(error, res);
   }

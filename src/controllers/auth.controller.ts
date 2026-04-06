@@ -198,6 +198,7 @@ const getMe = async (req: Request, res: Response) => {
 
     return res.json({
       status: 'success',
+      message: 'User profile retrieved successfully',
       data: userData,
     });
   } catch (error) {

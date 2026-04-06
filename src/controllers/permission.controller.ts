@@ -8,6 +8,7 @@ const getAllPermissions = async (req: Request, res: Response) => {
 
     res.status(200).json({
       status: 'success',
+      message: 'Permissions retrieved successfully',
       data: permissions,
     });
   } catch (error) {

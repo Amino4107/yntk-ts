@@ -14,8 +14,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
+                  status:
+                    type: string
+                    example: "success"
                   message:
                     type: string
                     example: "Permissions retrieved successfully"

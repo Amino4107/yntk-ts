@@ -351,7 +351,7 @@ The API uses **Pino** for structured JSON logging with comprehensive audit trail
   "level": 30,
   "time": 1702890637123,
   "action": "user_login",
-  "userId": 1,
+  "userId": "5ba52d7e-07f9-4b15-998f-fb1bf0885e7d",
   "email": "user@example.com",
   "msg": "User logged in successfully"
 }
@@ -437,3 +437,4 @@ Integration tests run against a real PostgreSQL database. Ensure your `DATABASE_
 - [x] ~~Add password reset functionality~~ ✅ **Completed**
 - [x] ~~Add rate limiting middleware~~ ✅ **Completed**
 - [x] ~~Add audit logging~~ ✅ **Completed**
+- [x] ~~Migrate User IDs to UUID~~ ✅ **Completed**

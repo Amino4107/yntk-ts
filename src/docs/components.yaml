@@ -83,3 +83,37 @@ components:
         message:
           type: string
           example: "Forbidden: You do not have the required permissions"
+    PaginationMeta:
+      type: object
+      properties:
+        totalItems:
+          type: integer
+          example: 100
+        itemsPerPage:
+          type: integer
+          example: 10
+        currentPage:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 10
+    PaginationLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          nullable: true
+          example: "/users?page=1&limit=10"
+        previous:
+          type: string
+          nullable: true
+          example: null
+        next:
+          type: string
+          nullable: true
+          example: "/users?page=2&limit=10"
+        last:
+          type: string
+          nullable: true
+          example: "/users?page=10&limit=10"

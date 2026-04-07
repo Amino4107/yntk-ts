@@ -62,6 +62,20 @@ describe('User Service', () => {
     });
   });
 
+  describe('getAllUsers', () => {
+    it('should return paginated users and transform to public format', async () => {
+      const mockUsers = [{ id: 1, username: 'test1', password: 'pwd' }, { id: 2, username: 'test2', password: 'pwd' }];
+      vi.mocked(userRepository.findAll).mockResolvedValue({ data: mockUsers, total: 2 } as any);
+
+      const result = await userService.getAllUsers();
+
+      expect(userRepository.findAll).toHaveBeenCalledWith(0, 10, { createdAt: 'asc' });
+      expect(result.data).toHaveLength(2);
+      expect(result.total).toBe(2);
+      expect(result.data[0]).not.toHaveProperty('password');
+    });
+  });
+
   describe('getUserById', () => {
     it('should return user if found', async () => {
       const mockUser = { id: 1, username: 'test', email: 'test@example.com' };

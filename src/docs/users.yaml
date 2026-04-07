@@ -6,6 +6,33 @@ paths:
         - Users
       security:
         - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+          description: Number of items per page
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            default: createdAt
+          description: Field to sort by
+        - in: query
+          name: sortOrder
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+          description: Sorting order
       responses:
         '200':
           description: A list of users
@@ -24,6 +51,10 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+                  links:
+                    $ref: '#/components/schemas/PaginationLinks'
     post:
       summary: Create a new user
       tags: 

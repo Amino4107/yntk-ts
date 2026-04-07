@@ -35,9 +35,33 @@ const createUser = async (payload: CreateUserInput): Promise<PublicUser> => {
   }
 };
 
-const getAllUsers = async (): Promise<PublicUser[]> => {
-  const users = await userRepository.findAll();
-  return users.map(toPublicUser);
+export type PaginatedUsersRet = {
+  data: PublicUser[];
+  total: number;
+};
+
+const getAllUsers = async (
+  page: number = 1,
+  limit: number = 10,
+  sortBy: string = 'createdAt',
+  sortOrder: 'asc' | 'desc' = 'asc'
+): Promise<PaginatedUsersRet> => {
+  const skip = (page - 1) * limit;
+  const take = limit;
+
+  // Secure sort mapping
+  const validSortFields = ['username', 'displayName', 'email', 'createdAt'];
+  const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+  
+  // type casting because we trust sortField is correctly typed by Prisma
+  const orderBy = { [sortField]: sortOrder } as any;
+
+  const { data, total } = await userRepository.findAll(skip, take, orderBy);
+  
+  return {
+    data: data.map(toPublicUser),
+    total,
+  };
 };
 
 const getUserById = async (id: string): Promise<PublicUser> => {

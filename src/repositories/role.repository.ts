@@ -1,18 +1,29 @@
 import prisma from '../config/prisma';
 import type { Prisma, Role } from '../generated/prisma/client';
 
-const findAll = (): Promise<any[]> =>
-  prisma.role.findMany({
-    include: {
-      permissions: {
-        select: { id: true, name: true, description: true }
+const findAll = async (
+  skip?: number,
+  take?: number,
+  orderBy?: Prisma.RoleOrderByWithRelationInput
+): Promise<{ data: any[]; total: number }> => {
+  const [data, total] = await prisma.$transaction([
+    prisma.role.findMany({
+      ...(skip !== undefined && { skip }),
+      ...(take !== undefined && { take }),
+      ...(orderBy !== undefined && { orderBy }),
+      include: {
+        permissions: {
+          select: { id: true, name: true, description: true }
+        },
+        _count: {
+          select: { users: true }
+        }
       },
-      _count: {
-        select: { users: true }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+    }),
+    prisma.role.count(),
+  ]);
+  return { data, total };
+};
 
 const findById = (id: number): Promise<any | null> =>
   prisma.role.findUnique({

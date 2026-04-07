@@ -2,6 +2,8 @@ import type { Request, Response } from 'express';
 
 import userService from '../services/user.service';
 import { handleControllerError } from './controller-utils';
+import { getPaginationMeta, getPaginationLinks } from '../utils/pagination.util';
+import type { PaginationQuery } from '../validations/pagination.validation';
 
 const parseUserIdParam = (req: Request, res: Response): string | null => {
   const id = req.params.id;
@@ -46,14 +48,23 @@ const createUser = async (req: Request, res: Response) => {
   }
 };
 
-const getUsers = async (_req: Request, res: Response) => {
+const getUsers = async (req: Request, res: Response) => {
   try {
-    const users = await userService.getAllUsers();
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc' } = req.query as unknown as PaginationQuery;
+
+    const { data: users, total } = await userService.getAllUsers(
+      Number(page),
+      Number(limit),
+      sortBy as string,
+      sortOrder as 'asc' | 'desc'
+    );
 
     return res.json({
       status: 'success',
       message: 'Users data retrieved successfully!',
       data: users,
+      meta: getPaginationMeta(total, Number(page), Number(limit)),
+      links: getPaginationLinks(req, Number(page), Number(limit), total),
     });
   } catch (error) {
     return handleControllerError(error, res);

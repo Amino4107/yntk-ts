@@ -1,12 +1,28 @@
 import type { Request, Response } from 'express';
 import roleService from '../services/role.service';
 import { handleControllerError } from './controller-utils';
+import { getPaginationMeta, getPaginationLinks } from '../utils/pagination.util';
+import type { PaginationQuery } from '../validations/pagination.validation';
 import type { CreateRoleInput, UpdateRoleInput } from '../validations/role.validation';
 
 const getRoles = async (req: Request, res: Response) => {
   try {
-    const roles = await roleService.getAllRoles();
-    res.status(200).json({ status: 'success', message: 'Roles retrieved successfully', data: roles });
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc' } = req.query as unknown as PaginationQuery;
+    
+    const { data: roles, total } = await roleService.getAllRoles(
+      Number(page),
+      Number(limit),
+      sortBy,
+      sortOrder
+    );
+
+    res.status(200).json({ 
+      status: 'success', 
+      message: 'Roles retrieved successfully', 
+      data: roles,
+      meta: getPaginationMeta(total, Number(page), Number(limit)),
+      links: getPaginationLinks(req, Number(page), Number(limit), total),
+    });
   } catch (error) {
     handleControllerError(error, res);
   }

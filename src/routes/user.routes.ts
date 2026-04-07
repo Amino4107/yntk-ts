@@ -4,6 +4,7 @@ import authMiddleware from '../middleware/auth.middleware';
 import requireVerifiedEmail from '../middleware/require-verified.middleware';
 import validate from '../middleware/validation.middleware';
 import { createUserSchema, updateUserSchema, updatePasswordSchema, assignRolesSchema } from '../validations/user.validation';
+import { paginationQuerySchema } from '../validations/pagination.validation';
 import userController from '../controllers/user.controller';
 import { requirePermission } from '../middleware/permission.middleware';
 
@@ -11,7 +12,7 @@ import { requirePermission } from '../middleware/permission.middleware';
 const userRouter: ExpressRouter = Router();
 
 userRouter.post('/', authMiddleware, requireVerifiedEmail, requirePermission('users:create'), validate(createUserSchema), userController.createUser);
-userRouter.get('/', authMiddleware, requirePermission('users:read'), userController.getUsers);
+userRouter.get('/', authMiddleware, requirePermission('users:read'), validate(paginationQuerySchema), userController.getUsers);
 userRouter.patch('/password', authMiddleware, requirePermission('users:update'), validate(updatePasswordSchema), userController.updatePassword);
 userRouter.get('/:id', authMiddleware, requirePermission('users:read'), userController.getUser);
 userRouter.put('/:id', authMiddleware, requirePermission('users:update'), validate(updateUserSchema), userController.updateUser);

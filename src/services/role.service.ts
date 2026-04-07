@@ -6,8 +6,24 @@ import logger from '../config/logger';
 // Hardcoded system roles that cannot be deleted or renamed freely
 const PROTECTED_ROLES = ['SUPERADMIN', 'ADMIN', 'USER'];
 
-const getAllRoles = async () => {
-  return await roleRepository.findAll();
+const getAllRoles = async (
+  page: number = 1,
+  limit: number = 10,
+  sortBy: string = 'createdAt',
+  sortOrder: 'asc' | 'desc' = 'asc'
+) => {
+  const skip = (page - 1) * limit;
+  const take = limit;
+
+  // Secure sort mapping
+  const validSortFields = ['name', 'createdAt'];
+  const sortField = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+  
+  const orderBy = { [sortField]: sortOrder } as any;
+
+  const { data, total } = await roleRepository.findAll(skip, take, orderBy);
+  
+  return { data, total };
 };
 
 const getRoleById = async (id: number) => {

@@ -13,6 +13,11 @@ describe('Role Controller', () => {
     req = {
       params: {},
       body: {},
+      query: {},
+      protocol: 'http',
+      get: vi.fn().mockReturnValue('localhost'),
+      baseUrl: '/api/v1',
+      path: '/roles',
     };
     res = {
       status: vi.fn().mockReturnThis(),
@@ -22,13 +27,18 @@ describe('Role Controller', () => {
 
   describe('getRoles', () => {
     it('should retrieve all roles successfully', async () => {
-      vi.mocked(roleService.getAllRoles).mockResolvedValue([{ id: 1, name: 'ADMIN' }] as any);
+      vi.mocked(roleService.getAllRoles).mockResolvedValue({ data: [{ id: 1, name: 'ADMIN' }], total: 1 } as any);
 
       await roleController.getRoles(req, res);
 
       expect(roleService.getAllRoles).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'success', data: expect.any(Array) }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ 
+        status: 'success', 
+        data: expect.any(Array),
+        meta: expect.any(Object),
+        links: expect.any(Object)
+      }));
     });
   });
 

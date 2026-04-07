@@ -13,12 +13,13 @@ describe('Role Service', () => {
   describe('getAllRoles', () => {
     it('should return all roles', async () => {
       const mockRoles = [{ id: 1, name: 'ADMIN' }, { id: 2, name: 'USER' }];
-      vi.mocked(roleRepository.findAll).mockResolvedValue(mockRoles as any);
+      vi.mocked(roleRepository.findAll).mockResolvedValue({ data: mockRoles, total: 2 } as any);
 
       const result = await roleService.getAllRoles();
 
       expect(roleRepository.findAll).toHaveBeenCalled();
-      expect(result).toHaveLength(2);
+      expect(result.data).toHaveLength(2);
+      expect(result.total).toBe(2);
     });
   });
 

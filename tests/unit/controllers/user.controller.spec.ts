@@ -13,6 +13,11 @@ describe('User Controller', () => {
     req = {
       body: {},
       params: {},
+      query: {},
+      protocol: 'http',
+      get: vi.fn().mockReturnValue('localhost'),
+      baseUrl: '/api/v1',
+      path: '/users',
       userData: { id: '1' },
     };
     res = {
@@ -45,16 +50,18 @@ describe('User Controller', () => {
   describe('getUsers', () => {
     it('should return all users', async () => {
       const mockUsers = [{ id: '1' }, { id: '2' }];
-      vi.mocked(userService.getAllUsers).mockResolvedValue(mockUsers as any);
+      vi.mocked(userService.getAllUsers).mockResolvedValue({ data: mockUsers, total: 2 } as any);
 
       await userController.getUsers(req, res);
 
       expect(userService.getAllUsers).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith({
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         status: 'success',
         message: 'Users data retrieved successfully!',
         data: mockUsers,
-      });
+        meta: expect.any(Object),
+        links: expect.any(Object)
+      }));
     });
   });
 

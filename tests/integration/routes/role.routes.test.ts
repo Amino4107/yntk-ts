@@ -59,6 +59,13 @@ describe('Role Routes Integration', () => {
     expect(res.body.data.some((r: any) => r.name === 'SUPERADMIN')).toBe(true);
   });
 
+  it('should search roles by query', async () => {
+    const res = await request(app).get('/roles?search=SUPER').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].name).toBe('SUPERADMIN');
+  });
+
   it('should block non-admins from getting roles', async () => {
     const regRes = await request(app).post('/auth/register').send({
       username: 'basicuser', email: 'basic@example.com', password: 'Password123!', displayName: 'Basic'

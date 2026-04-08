@@ -17,9 +17,18 @@ describe('Role Service', () => {
 
       const result = await roleService.getAllRoles();
 
-      expect(roleRepository.findAll).toHaveBeenCalled();
+      expect(roleRepository.findAll).toHaveBeenCalledWith(0, 10, { createdAt: 'asc' }, undefined);
       expect(result.data).toHaveLength(2);
       expect(result.total).toBe(2);
+    });
+
+    it('should pass search parameter to repository', async () => {
+      const mockRoles = [{ id: 1, name: 'ADMIN' }];
+      vi.mocked(roleRepository.findAll).mockResolvedValue({ data: mockRoles, total: 1 } as any);
+
+      await roleService.getAllRoles(1, 10, 'createdAt', 'asc', 'admin');
+
+      expect(roleRepository.findAll).toHaveBeenCalledWith(0, 10, { createdAt: 'asc' }, 'admin');
     });
   });
 

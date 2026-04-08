@@ -7,13 +7,14 @@ import type { CreateRoleInput, UpdateRoleInput } from '../validations/role.valid
 
 const getRoles = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc' } = req.query as unknown as PaginationQuery;
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc', search } = req.query as unknown as PaginationQuery;
     
     const { data: roles, total } = await roleService.getAllRoles(
       Number(page),
       Number(limit),
       sortBy,
-      sortOrder
+      sortOrder,
+      search
     );
 
     res.status(200).json({ 

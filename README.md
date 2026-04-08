@@ -126,10 +126,10 @@ The API includes interactive documentation powered by Swagger UI and OpenAPI 3.0
   - Comprehensive schemas for request bodies, parameters, and responses.
   - Read-only in production: The "Try it out" functionality is disabled in production environments for security.
 
-## API Endpoints
+### API Endpoints
 
 All endpoints respond with `{ status, message, data? }` JSON payloads.
-For paginated endpoints (like `GET /users` and `GET /roles`), the response also includes `meta` and `links` objects containing paging data and HATEOAS navigational URLs. They optionally accept query parameters: `?page=1&limit=10&sortBy=createdAt&sortOrder=asc`.
+For paginated endpoints (like `GET /users` and `GET /roles`), the response also includes `meta` and `links` objects containing paging data and HATEOAS navigational URLs. They optionally accept query parameters: `?page=1&limit=10&sortBy=createdAt&sortOrder=asc&search=value`.
 
 ### Authentication Routes (`/auth`)
 
@@ -439,4 +439,4 @@ Integration tests run against a real PostgreSQL database. Ensure your `DATABASE_
 - [x] ~~Add rate limiting middleware~~ ✅ **Completed**
 - [x] ~~Add audit logging~~ ✅ **Completed**
 - [x] ~~Migrate User IDs to UUID~~ ✅ **Completed**
-- [x] ~~Add pagination & sorting capabilities~~ ✅ **Completed**
+- [x] ~~Add pagination, sorting, & search capabilities~~ ✅ **Completed**

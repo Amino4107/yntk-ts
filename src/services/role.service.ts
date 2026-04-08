@@ -10,7 +10,8 @@ const getAllRoles = async (
   page: number = 1,
   limit: number = 10,
   sortBy: string = 'createdAt',
-  sortOrder: 'asc' | 'desc' = 'asc'
+  sortOrder: 'asc' | 'desc' = 'asc',
+  search?: string
 ) => {
   const skip = (page - 1) * limit;
   const take = limit;
@@ -21,7 +22,7 @@ const getAllRoles = async (
   
   const orderBy = { [sortField]: sortOrder } as any;
 
-  const { data, total } = await roleRepository.findAll(skip, take, orderBy);
+  const { data, total } = await roleRepository.findAll(skip, take, orderBy, search);
   
   return { data, total };
 };

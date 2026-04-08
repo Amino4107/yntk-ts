@@ -54,7 +54,7 @@ describe('User Controller', () => {
 
       await userController.getUsers(req, res);
 
-      expect(userService.getAllUsers).toHaveBeenCalled();
+      expect(userService.getAllUsers).toHaveBeenCalledWith(1, 10, 'createdAt', 'asc', undefined);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         status: 'success',
         message: 'Users data retrieved successfully!',
@@ -62,6 +62,16 @@ describe('User Controller', () => {
         meta: expect.any(Object),
         links: expect.any(Object)
       }));
+    });
+
+    it('should pass search parameter to service', async () => {
+      req.query = { search: 'test' };
+      const mockUsers = [{ id: '1' }];
+      vi.mocked(userService.getAllUsers).mockResolvedValue({ data: mockUsers, total: 1 } as any);
+
+      await userController.getUsers(req, res);
+
+      expect(userService.getAllUsers).toHaveBeenCalledWith(1, 10, 'createdAt', 'asc', 'test');
     });
   });
 

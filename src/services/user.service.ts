@@ -44,7 +44,8 @@ const getAllUsers = async (
   page: number = 1,
   limit: number = 10,
   sortBy: string = 'createdAt',
-  sortOrder: 'asc' | 'desc' = 'asc'
+  sortOrder: 'asc' | 'desc' = 'asc',
+  search?: string
 ): Promise<PaginatedUsersRet> => {
   const skip = (page - 1) * limit;
   const take = limit;
@@ -56,7 +57,7 @@ const getAllUsers = async (
   // type casting because we trust sortField is correctly typed by Prisma
   const orderBy = { [sortField]: sortOrder } as any;
 
-  const { data, total } = await userRepository.findAll(skip, take, orderBy);
+  const { data, total } = await userRepository.findAll(skip, take, orderBy, search);
   
   return {
     data: data.map(toPublicUser),

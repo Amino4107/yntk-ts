@@ -4,10 +4,21 @@ import type { Prisma, Role } from '../generated/prisma/client';
 const findAll = async (
   skip?: number,
   take?: number,
-  orderBy?: Prisma.RoleOrderByWithRelationInput
+  orderBy?: Prisma.RoleOrderByWithRelationInput,
+  search?: string
 ): Promise<{ data: any[]; total: number }> => {
+  const where: Prisma.RoleWhereInput = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : {};
+
   const [data, total] = await prisma.$transaction([
     prisma.role.findMany({
+      where,
       ...(skip !== undefined && { skip }),
       ...(take !== undefined && { take }),
       ...(orderBy !== undefined && { orderBy }),
@@ -20,7 +31,7 @@ const findAll = async (
         }
       },
     }),
-    prisma.role.count(),
+    prisma.role.count({ where }),
   ]);
   return { data, total };
 };

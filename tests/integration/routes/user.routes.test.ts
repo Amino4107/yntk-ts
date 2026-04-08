@@ -76,6 +76,16 @@ describe('User Routes Integration', () => {
     expect(res.body.data.length).toBeGreaterThanOrEqual(1);
   }, 10000);
 
+  it('should search users by query', async () => {
+    const res = await request(app)
+      .get('/users?search=auth')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.some((u: any) => u.username.includes('auth'))).toBe(true);
+  }, 10000);
+
   it('should get user by id', async () => {
     const res = await request(app)
       .get(`/users/${userId}`)

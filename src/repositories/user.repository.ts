@@ -44,15 +44,27 @@ const findByIdWithPassword = (id: string): Promise<any> =>
 const findAll = async (
   skip?: number,
   take?: number,
-  orderBy?: Prisma.UserOrderByWithRelationInput
+  orderBy?: Prisma.UserOrderByWithRelationInput,
+  search?: string
 ): Promise<{ data: User[]; total: number }> => {
+  const where: Prisma.UserWhereInput = search
+    ? {
+        OR: [
+          { username: { contains: search, mode: 'insensitive' } },
+          { displayName: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : {};
+
   const [data, total] = await prisma.$transaction([
     prisma.user.findMany({
+      where,
       ...(skip !== undefined && { skip }),
       ...(take !== undefined && { take }),
       ...(orderBy !== undefined && { orderBy }),
     }),
-    prisma.user.count(),
+    prisma.user.count({ where }),
   ]);
   return { data, total };
 };

@@ -6,6 +6,7 @@ export const paginationQuerySchema = z.object({
     limit: z.coerce.number().int().min(1, 'Limit must be greater than or equal to 1').max(100, 'Maximum limit is 100').default(10),
     sortBy: z.string().default('createdAt'),
     sortOrder: z.enum(['asc', 'desc']).default('asc'),
+    search: z.string().optional(),
   }),
 });
 

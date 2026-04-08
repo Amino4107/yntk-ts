@@ -69,10 +69,19 @@ describe('User Service', () => {
 
       const result = await userService.getAllUsers();
 
-      expect(userRepository.findAll).toHaveBeenCalledWith(0, 10, { createdAt: 'asc' });
+      expect(userRepository.findAll).toHaveBeenCalledWith(0, 10, { createdAt: 'asc' }, undefined);
       expect(result.data).toHaveLength(2);
       expect(result.total).toBe(2);
       expect(result.data[0]).not.toHaveProperty('password');
+    });
+
+    it('should pass search parameter to repository', async () => {
+      const mockUsers = [{ id: 1, username: 'test1', password: 'pwd' }];
+      vi.mocked(userRepository.findAll).mockResolvedValue({ data: mockUsers, total: 1 } as any);
+
+      await userService.getAllUsers(1, 10, 'createdAt', 'asc', 'test1');
+
+      expect(userRepository.findAll).toHaveBeenCalledWith(0, 10, { createdAt: 'asc' }, 'test1');
     });
   });
 

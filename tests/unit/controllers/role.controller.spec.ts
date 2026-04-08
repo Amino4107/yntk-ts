@@ -31,7 +31,7 @@ describe('Role Controller', () => {
 
       await roleController.getRoles(req, res);
 
-      expect(roleService.getAllRoles).toHaveBeenCalled();
+      expect(roleService.getAllRoles).toHaveBeenCalledWith(1, 10, 'createdAt', 'asc', undefined);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ 
         status: 'success', 
@@ -39,6 +39,15 @@ describe('Role Controller', () => {
         meta: expect.any(Object),
         links: expect.any(Object)
       }));
+    });
+
+    it('should pass search parameter to service', async () => {
+      req.query = { search: 'admin' };
+      vi.mocked(roleService.getAllRoles).mockResolvedValue({ data: [{ id: 1, name: 'ADMIN' }], total: 1 } as any);
+
+      await roleController.getRoles(req, res);
+
+      expect(roleService.getAllRoles).toHaveBeenCalledWith(1, 10, 'createdAt', 'asc', 'admin');
     });
   });
 

@@ -50,13 +50,14 @@ const createUser = async (req: Request, res: Response) => {
 
 const getUsers = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc' } = req.query as unknown as PaginationQuery;
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'asc', search } = req.query as unknown as PaginationQuery;
 
     const { data: users, total } = await userService.getAllUsers(
       Number(page),
       Number(limit),
       sortBy as string,
-      sortOrder as 'asc' | 'desc'
+      sortOrder as 'asc' | 'desc',
+      search
     );
 
     return res.json({

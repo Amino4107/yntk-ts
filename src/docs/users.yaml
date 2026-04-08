@@ -33,6 +33,11 @@ paths:
             enum: [asc, desc]
             default: asc
           description: Sorting order
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Filter users by username, displayName, or email
       responses:
         '200':
           description: A list of users

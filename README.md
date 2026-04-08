@@ -1,6 +1,8 @@
-# API HI
+# YNTK-TS
+## You Need This Kit - Type-safe Starter!
 
-TypeScript/Express REST API that handles user management and authentication with JWTs, Prisma ORM, and PostgreSQL. The project is organized by feature with explicit service/repository layers so business logic stays separated from transport concerns.
+
+TypeScript/Express REST API starter kit that ships with User Management, Role Management, and Authentication with JWTs, Prisma ORM, and PostgreSQL. The project is organized by feature with explicit service/repository layers so business logic stays separated from transport concerns.
 
 ## Tech Stack
 
@@ -91,6 +93,7 @@ CORS_CREDENTIALS=true
 1. Model updates live in `prisma/schema.prisma`.
 2. Apply migrations: `pnpm prisma migrate dev` (for local) or `pnpm prisma db push` for quick sync.
 3. Generate the Prisma client (needed whenever the schema changes): `pnpm prisma generate`. Output lands in `src/generated/prisma`.
+4. Seed the database: `pnpm prisma db seed`
 
 ### 4. Development
 
@@ -108,6 +111,7 @@ Runs tsx in watch mode, recompiling on changes. The API listens on `PORT` from t
 | `pnpm prisma migrate dev` | Create/apply migrations and regenerate Prisma client |
 | `pnpm prisma generate` | Regenerate Prisma client manually |
 | `pnpm prisma db push` | Quick sync schema to database without migrations |
+| `pnpm prisma db seed` | Seed the database |
 | `pnpm build` | Build the API for production (bundles with tsup) |
 | `pnpm start` | Start the production server from `dist/` |
 | `pnpm test` | Run all tests in watch mode |
@@ -424,19 +428,3 @@ Integration tests run against a real PostgreSQL database. Ensure your `DATABASE_
 > [!WARNING]
 > Integration tests truncate all tables before each test. **Do not run against a production database.**
 
-
-## Roadmap / TODO
-
-- [x] ~~Add automated integration test~~ ✅ **Completed**
-- [x] ~~Add automated unit test~~ ✅ **Completed**
-- [x] ~~Implement CORS configuration~~ ✅ **Completed**
-- [x] ~~Set up production build script~~ ✅ **Completed**
-- [x] ~~Add API documentation (Swagger/OpenAPI)~~ ✅ **Completed**
-- [x] ~~Implement refresh token rotation~~ ✅ **Completed**
-- [x] ~~Implement Role Based Access Control (RBAC)~~ ✅ **Completed**
-- [x] ~~Add email verification flow~~ ✅ **Completed**
-- [x] ~~Add password reset functionality~~ ✅ **Completed**
-- [x] ~~Add rate limiting middleware~~ ✅ **Completed**
-- [x] ~~Add audit logging~~ ✅ **Completed**
-- [x] ~~Migrate User IDs to UUID~~ ✅ **Completed**
-- [x] ~~Add pagination, sorting, & search capabilities~~ ✅ **Completed**

